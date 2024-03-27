@@ -1,0 +1,1 @@
+.mtl files contain surface properties that define the texture, color and reflectivity of the objects in the related .obj file. These are necessary for loading textures in Blender but I believe they are irrelevant to OpenGL. I'm keeping them here in case they are needed later.
