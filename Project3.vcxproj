@@ -133,8 +133,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="Fragment.glsl" />
+    <None Include="FragmentAsteroids.glsl" />
     <None Include="packages.config" />
     <None Include="Vertex.glsl" />
+    <None Include="VertexAsteroids.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Project3.cpp" />

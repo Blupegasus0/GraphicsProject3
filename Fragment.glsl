@@ -1,10 +1,6 @@
-#version 330 core
-in vec2 TexxCoords;
-out vec4 color;
-
-uniform sampler2D texture_diffuse1;
+#version 120 core
 
 void main()
 {
-    color = texture(texture_diffuse1, TexxCoords);
+    gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0);
 }

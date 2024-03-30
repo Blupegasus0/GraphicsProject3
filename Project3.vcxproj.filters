@@ -22,6 +22,12 @@
     <None Include="Vertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="VertexAsteroids.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="FragmentAsteroids.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Project3.cpp">
