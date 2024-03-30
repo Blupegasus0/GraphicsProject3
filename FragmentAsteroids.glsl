@@ -1,6 +1,6 @@
-#version 120 core
-in vec2 TexCoords;
-out vec4 color;
+#version 120
+varying vec2 TexCoords;
+varying vec4 color;
 
 void main()
 {
