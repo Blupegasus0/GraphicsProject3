@@ -27,7 +27,7 @@ GLuint sWidth = 1300, sHeight = 720;
                      //x-comp,y-comp,z-comp
 Camera camera(glm::vec3(0.0f, 0.0f, 10.0f));
 
-GLfloat spaceTime = 0.0f; // Time variable
+GLfloat spaceTime = 350.0f; // Time variable
 
 GLfloat translateX = 0.0f;
 
@@ -114,10 +114,46 @@ static void render_SpaceAsteroids(Shader& shader, Model& model, Camera& camera)
   model.Draw(shader);
 }
 
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, GL_TRUE);
+  if (key == GLFW_KEY_W)
+    camera.ProcessKeyboard(FORWARD, 0.1f);
+  if (key == GLFW_KEY_S)
+    camera.ProcessKeyboard(BACKWARD, 0.1f);
+  if (key == GLFW_KEY_A)
+    camera.ProcessKeyboard(LEFT, 0.1f);
+  if (key == GLFW_KEY_D)
+    camera.ProcessKeyboard(RIGHT, 0.1f);
+  if (key == GLFW_KEY_Q)
+    camera.ProcessKeyboard(UP, 0.1f);
+  if (key == GLFW_KEY_E)
+    camera.ProcessKeyboard(DOWN, 0.1f);
+  if (key == GLFW_KEY_R)
+  {
+    spaceTime = 350.0f;
+    translateX = 0.0f;
+    camera.Position = glm::vec3(0.0f, 0.0f, 10.0f);
+    camera.Yaw = YAW;
+    camera.Pitch = PITCH;
+  }
+  if (key == GLFW_KEY_Z)
+		camera.ProcessMouseMovement(-1.0f, 0.0f);
+  if (key == GLFW_KEY_X)
+    camera.ProcessMouseMovement(1.0f, 0.0f);
+  if (key == GLFW_KEY_C)
+		camera.ProcessMouseMovement(0.0f, -1.0f);
+  if (key == GLFW_KEY_V)
+		camera.ProcessMouseMovement(0.0f, 1.0f);
+}
+
 // The MAIN function, from here we start our application and run the loop
 int main()
 {
   init_Resources();
+
+  glfwSetKeyCallback(window, key_callback);
 
   Shader spaceShipShader("SpaceShipVertex.glsl", "SpaceShipFragment.glsl");
 
@@ -147,8 +183,8 @@ int main()
     // Increment the time variable
     spaceTime += .1;
     // Update the camera to zoom out
-    if (spaceTime > 360.0f && spaceTime < 370.f)
-      camera.Position = glm::vec3(0.0f, 0.0f, spaceTime - 360.0f + 10.0f);
+    if (spaceTime > 360.0f && spaceTime < 363.0f)
+      camera.Position = glm::vec3(camera.Position.x, camera.Position.y, spaceTime - 360.0f + camera.Position.z);
     // Update the camera to the right and up of the spaceship and look at it from the bottom left corner
     if (spaceTime > 390.0f && spaceTime < 393.0f)
       camera.Position = glm::vec3(camera.Position.x + .1f, camera.Position.y + .1f, camera.Position.z);
