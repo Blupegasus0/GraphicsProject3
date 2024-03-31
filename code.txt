@@ -1,0 +1,25 @@
+    // Add transformation matrices
+
+    //// =======================================================================
+    //// Create the View matrix
+    //// =======================================================================
+    //asteroidsShader.Use();
+    //glUniformMatrix4fv(glGetUniformLocation(asteroidsShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+    //asteroidsShader.Use();
+
+    //// =======================================================================
+    //// Create the model matrix
+    //// =======================================================================
+    //glm::mat4 asteroidModel = glm::mat4(1);
+    //asteroidModel = glm::rotate(asteroidModel, glm::radians(-100.f), glm::vec3(.0f, 1.0f, .0f));
+    //asteroidModel = glm::translate(asteroidModel,glm::vec3(glfwGetTime(), 5.f, -10.f));
+    //
+    //// =======================================================================
+    //// Pass the Model matrix, to the shader as "model"
+    //// =======================================================================
+    //glUniformMatrix4fv(glGetUniformLocation(asteroidsShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(asteroidModel));
+
+    //// =======================================================================
+    //// Draw the object.
+    //// =======================================================================
+    //asteroids.Draw(asteroidsShader);

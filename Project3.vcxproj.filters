@@ -16,16 +16,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Fragment.glsl">
+    <None Include="SpaceShipFragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Vertex.glsl">
+    <None Include="SpaceShipVertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="VertexAsteroids.glsl">
+    <None Include="AsteroidsVertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="FragmentAsteroids.glsl">
+    <None Include="AsteroidsFragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
@@ -45,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
