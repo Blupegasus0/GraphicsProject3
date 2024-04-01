@@ -131,8 +131,8 @@ static void render_Stars(Shader& shader, Model& model, Camera& camera, GLuint te
     glm::mat4 starModel = glm::mat4(1);
     
 
-    //starModel = glm::scale(starModel, glm::vec3(100000.5f)); //using Torus3.obj
-    starModel = glm::scale(starModel, glm::vec3(50.0f));       //using planet.obj
+    starModel = glm::scale(starModel, glm::vec3(100000.5f)); //using Torus3.obj
+    //starModel = glm::scale(starModel, glm::vec3(50.0f));       //using planet.obj
     //starModel = glm::rotate(starModel, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     starAngle += 0.0001;
     if (starAngle > 360) starAngle = 0.01;
@@ -210,8 +210,8 @@ int main()
 
   Model asteroids((GLchar*)"assets/objects/asteroids.obj");
 
-  //Model torus((GLchar*)"assets/objects/Torus3.obj");          // ... Torus
-  Model torus((GLchar*)"assets/objects/planet.obj");          // ... Planet
+  Model torus((GLchar*)"assets/objects/Torus3.obj");          // ... Torus
+  //Model torus((GLchar*)"assets/objects/planet.obj");          // ... Planet
 
   GLuint starTexture = loadBMP("assets/images/env_stars.bmp");
 
