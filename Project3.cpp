@@ -117,8 +117,10 @@ static void render_SpaceAsteroids(Shader& shader, Model& model, Camera& camera)
 
 static void render_Stars(Shader& shader, Model& model, Camera& camera, GLuint texture)
 {
+    //Pass location of texture to the shader as uniform variable
     GLuint TextureID = glGetUniformLocation(shader.Program, "starTexture");
 
+    //Bind the texture to the model
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -130,15 +132,18 @@ static void render_Stars(Shader& shader, Model& model, Camera& camera, GLuint te
     // =======================================================================
     glm::mat4 starModel = glm::mat4(1);
 
+    //Move the torus as the camera moves
     starModel = glm::translate(starModel, glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z));
 
+    //Increase the size of the torus
     starModel = glm::scale(starModel, glm::vec3(100000.5f)); //using Torus3.obj
     //starModel = glm::scale(starModel, glm::vec3(50.0f));       //using planet.obj
-    //starModel = glm::rotate(starModel, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+    //Rotate torus
     starAngle += 0.0001;
     if (starAngle > 360) starAngle = 0.01;
-    starModel = glm::rotate(starModel, glm::radians(camera.Pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-    starModel = glm::rotate(starModel, starAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+    starModel = glm::rotate(starModel, glm::radians(camera.Pitch), glm::vec3(1.0f, 0.0f, 0.0f)); //Rotate the torus around the x-axis as the camera angle (Pitch) moves
+    starModel = glm::rotate(starModel, starAngle, glm::vec3(0.0f, 1.0f, 0.0f)); //Let the torus continuously rotate around the y-axis
     
 
     
