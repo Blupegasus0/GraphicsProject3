@@ -30,6 +30,7 @@ Camera camera(glm::vec3(0.0f, 0.0f, 10.0f));
 GLfloat spaceTime = 350.0f; // Time variable
 
 GLfloat translateX = 0.0f;
+GLfloat starAngle = 0.0f;
 
 static void init_Resources()
 {
@@ -114,6 +115,46 @@ static void render_SpaceAsteroids(Shader& shader, Model& model, Camera& camera)
   model.Draw(shader);
 }
 
+static void render_Stars(Shader& shader, Model& model, Camera& camera, GLuint texture)
+{
+    GLuint TextureID = glGetUniformLocation(shader.Program, "starTexture");
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    shader.Use();
+    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+
+    // =======================================================================
+    // Create the model matrix
+    // =======================================================================
+    glm::mat4 starModel = glm::mat4(1);
+    
+
+    //starModel = glm::scale(starModel, glm::vec3(100000.5f)); //using Torus3.obj
+    starModel = glm::scale(starModel, glm::vec3(50.0f));       //using planet.obj
+    //starModel = glm::rotate(starModel, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    starAngle += 0.0001;
+    if (starAngle > 360) starAngle = 0.01;
+    //starModel = glm::rotate(starModel, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    starModel = glm::rotate(starModel, starAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+   // starModel = glm::translate(starModel, glm::vec3(0.1f, 0.1f, 0.0f));
+    
+
+    
+
+    // =======================================================================
+    // Pass the Model matrix, to the shader as "model"
+    // =======================================================================
+    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(starModel));
+
+    // =======================================================================
+    // Draw the object.
+    // =======================================================================
+    model.Draw(shader);
+
+}
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -158,18 +199,32 @@ int main()
   Shader spaceShipShader("SpaceShipVertex.glsl", "SpaceShipFragment.glsl");
 
   Shader asteroidsShader("AsteroidsVertex.glsl", "AsteroidsFragment.glsl");
+
+  Shader starShader("TorusVertex.glsl", "TorusFragment.glsl");
+
+  GLuint vertexPositionID = glGetAttribLocation(starShader.Program, "vertexPosition");
+  
+  GLuint vertexUVID = glGetAttribLocation(starShader.Program, "vertexUV");
   
   Model spaceShip((GLchar *)"assets/objects/ship.obj");
 
   Model asteroids((GLchar*)"assets/objects/asteroids.obj");
 
-  glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 100.0f);
+  //Model torus((GLchar*)"assets/objects/Torus3.obj");          // ... Torus
+  Model torus((GLchar*)"assets/objects/planet.obj");          // ... Planet
+
+  GLuint starTexture = loadBMP("assets/images/env_stars.bmp");
+
+  glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 10000000000.0f);
 
   spaceShipShader.Use();
   glUniformMatrix4fv(glGetUniformLocation(spaceShipShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
   asteroidsShader.Use();
   glUniformMatrix4fv(glGetUniformLocation(asteroidsShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+  starShader.Use();
+  glUniformMatrix4fv(glGetUniformLocation(starShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
   // Iterate this block while the window is open
   while (!glfwWindowShouldClose(window))
@@ -191,9 +246,10 @@ int main()
     // check if the spaceship and the asteroids have collided and reset the time variable
 
     // Render the asteroids
-    if (spaceTime > 393.0f)
-      render_SpaceAsteroids(asteroidsShader, asteroids, camera);
-
+    if (spaceTime > 393.0f) {
+        render_Stars(starShader, torus, camera, starTexture);
+        render_SpaceAsteroids(asteroidsShader, asteroids, camera);
+    }
 		// Render the spaceship
     render_SpaceShip(spaceShipShader, spaceShip, camera);
     // Swap the buffers
