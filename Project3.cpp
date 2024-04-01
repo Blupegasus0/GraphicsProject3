@@ -129,16 +129,16 @@ static void render_Stars(Shader& shader, Model& model, Camera& camera, GLuint te
     // Create the model matrix
     // =======================================================================
     glm::mat4 starModel = glm::mat4(1);
-    
+
+    starModel = glm::translate(starModel, glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z));
 
     starModel = glm::scale(starModel, glm::vec3(100000.5f)); //using Torus3.obj
     //starModel = glm::scale(starModel, glm::vec3(50.0f));       //using planet.obj
     //starModel = glm::rotate(starModel, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     starAngle += 0.0001;
     if (starAngle > 360) starAngle = 0.01;
-    //starModel = glm::rotate(starModel, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    starModel = glm::rotate(starModel, glm::radians(camera.Pitch), glm::vec3(1.0f, 0.0f, 0.0f));
     starModel = glm::rotate(starModel, starAngle, glm::vec3(0.0f, 1.0f, 0.0f));
-   // starModel = glm::translate(starModel, glm::vec3(0.1f, 0.1f, 0.0f));
     
 
     
@@ -237,6 +237,8 @@ int main()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Increment the time variable
     spaceTime += .1;
+    //Render the stars
+    render_Stars(starShader, torus, camera, starTexture);
     // Update the camera to zoom out
     if (spaceTime > 360.0f && spaceTime < 363.0f)
       camera.Position = glm::vec3(camera.Position.x, camera.Position.y, spaceTime - 360.0f + camera.Position.z);
@@ -247,7 +249,6 @@ int main()
 
     // Render the asteroids
     if (spaceTime > 393.0f) {
-        render_Stars(starShader, torus, camera, starTexture);
         render_SpaceAsteroids(asteroidsShader, asteroids, camera);
     }
 		// Render the spaceship
