@@ -1,7 +1,13 @@
 #version 330 core
-out vec4 color;
+
+// Interpolated values from the vertex shaders
+varying vec2 UV;
+varying vec3 Position;
+
+// Values that stay constant for the whole mesh.
+uniform sampler2D asteroidTexture;
 
 void main()
-{
-    color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-}
+    {
+        gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+    }

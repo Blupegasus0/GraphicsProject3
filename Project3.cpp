@@ -17,20 +17,31 @@
 #include "model.h"
 #include "texture.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // Active window
 GLFWwindow *window;
 
 // Properties
 GLuint sWidth = 1300, sHeight = 720;
 
+static const GLfloat starScale = 500000.0f;
+
 // Camera
                      //x-comp,y-comp,z-comp
-Camera camera(glm::vec3(0.0f, 0.0f, 10.0f));
+Camera camera(glm::vec3(0.0f, starScale, 10.0f));
 
 GLfloat spaceTime = 350.0f; // Time variable
 
 GLfloat translateX = 0.0f;
-GLfloat starAngle = 0.0f;
+GLfloat starAngle = 0.05f;
+GLfloat cameraPitch = camera.Pitch;
+GLfloat cameraYaw = camera.Yaw;
+GLfloat shipX = 0.0f;
+GLfloat shipY = 0.0f;
+GLfloat shipZ = 0.0f;
 
 static void init_Resources()
 {
@@ -58,13 +69,24 @@ static void init_Resources()
   glEnable(GL_DEPTH_TEST);
 }
 
-static void render_SpaceShip(Shader& shader, Model& model, Camera& camera)
+GLfloat travelCoords(GLfloat angle, GLfloat y, GLfloat z, int choice) {
+    GLfloat ycoord, zcoord;
+    if (choice == 0) {
+        ycoord = ((y)*cos(glm::radians(angle)) - ((z)*sin(glm::radians(angle))));
+        return ycoord;
+    }
+    else {
+        zcoord = ((y)*sin(glm::radians(angle)) + ((z)*cos(glm::radians(angle))));
+        return zcoord;
+    }
+}
+
+static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuint texture)
 {
-  GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
   GLuint TextureID = glGetUniformLocation(shader.Program, "shipTexture");
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, shipTexture);
+  glBindTexture(GL_TEXTURE_2D, texture);
 
 	shader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
@@ -73,11 +95,20 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera)
 	// Create the model matrix
 	// =======================================================================
 	glm::mat4 spaceShipModel = glm::mat4(1.f);
+    shipY = starScale;
+    spaceShipModel = glm::translate(spaceShipModel, glm::vec3(0.0f, shipY, 0.0f));
+    /*shipY = (travelCoords(starAngle, shipY, shipZ, 0));
+    shipZ = (travelCoords(starAngle, shipY, shipZ, 1));
+    std::cout << shipX << " " << shipY << " " << shipZ << endl;
+    spaceShipModel = glm::translate(spaceShipModel, glm::vec3(0.0f, shipY, shipZ));
+    camera.Position = glm::vec3(shipX, shipY, shipZ + 10.0f);*/
   spaceShipModel = glm::scale(spaceShipModel, glm::vec3(1.5f,1.5f,1.5f));
+  
   // Rotate the spaceship around the axis with an angle of 1 degrees per second
   // the ship starts at the origin, facing the negative x-axis, so we rotate it so that it faces the positive z-axis 1 degree per second
   spaceShipModel = glm::rotate(spaceShipModel, glm::radians(min(spaceTime, 360.0f)), glm::vec3(1.0f, 0.f, 0.0f));
   spaceShipModel = glm::rotate(spaceShipModel, glm::radians(min(spaceTime, 270.0f)), glm::vec3(0.0f, 1.0f, 0.0f));
+
   
 	// =======================================================================
 	// Pass the Model matrix, to the shader as "model"
@@ -92,6 +123,13 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera)
 
 static void render_SpaceAsteroids(Shader& shader, Model& model, Camera& camera)
 {
+   /* //Pass location of texture to the shader as uniform variable
+    GLuint TextureID = glGetUniformLocation(shader.Program, "asteroidTexture");
+
+    //Bind the texture to the model
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);*/
+
   shader.Use();
   glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 
@@ -99,11 +137,12 @@ static void render_SpaceAsteroids(Shader& shader, Model& model, Camera& camera)
   // Create the model matrix
   // =======================================================================
   glm::mat4 asteroidsModel = glm::mat4(1.f);
+
+  asteroidsModel = glm::rotate(asteroidsModel, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  translateX += .1f;
+  asteroidsModel = glm::translate(asteroidsModel, glm::vec3(-75.0f + translateX, starScale + 10.0f, 15.0f));
   asteroidsModel = glm::scale(asteroidsModel, glm::vec3(1.5f, 1.5f, 1.5f));
   // Rotate the asteroids around the axis with an angle of 1 degrees per second
-  translateX += .1f;
-  asteroidsModel = glm::rotate(asteroidsModel, glm::radians(270.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-  asteroidsModel = glm::translate(asteroidsModel, glm::vec3(-75.0f + translateX, 10.0f, 15.0f));
   // =======================================================================
   // Pass the Model matrix, to the shader as "model"
   // =======================================================================
@@ -132,18 +171,15 @@ static void render_Stars(Shader& shader, Model& model, Camera& camera, GLuint te
     // =======================================================================
     glm::mat4 starModel = glm::mat4(1);
 
-    //Move the torus as the camera moves
-    starModel = glm::translate(starModel, glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z));
-
+   starModel = glm::rotate(starModel, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     //Increase the size of the torus
-    starModel = glm::scale(starModel, glm::vec3(100000.5f)); //using Torus3.obj
-    //starModel = glm::scale(starModel, glm::vec3(50.0f));       //using planet.obj
+    starModel = glm::scale(starModel, glm::vec3(starScale)); //using Torus3.obj
 
+    
     //Rotate torus
     starAngle += 0.0001;
     if (starAngle > 360) starAngle = 0.01;
-    starModel = glm::rotate(starModel, glm::radians(camera.Pitch), glm::vec3(1.0f, 0.0f, 0.0f)); //Rotate the torus around the x-axis as the camera angle (Pitch) moves
-    starModel = glm::rotate(starModel, starAngle, glm::vec3(0.0f, 1.0f, 0.0f)); //Let the torus continuously rotate around the y-axis
+    starModel = glm::rotate(starModel, -starAngle, glm::vec3(0.0f, 1.0f, 0.0f)); //Let the torus continuously rotate around the y-axis
     
 
     
@@ -180,7 +216,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
   {
     spaceTime = 350.0f;
     translateX = 0.0f;
-    camera.Position = glm::vec3(0.0f, 0.0f, 10.0f);
+    camera.Position = glm::vec3(0.0f, starScale, 10.0f);
     camera.Yaw = YAW;
     camera.Pitch = PITCH;
   }
@@ -207,9 +243,12 @@ int main()
 
   Shader starShader("TorusVertex.glsl", "TorusFragment.glsl");
 
-  GLuint vertexPositionID = glGetAttribLocation(starShader.Program, "vertexPosition");
-  
-  GLuint vertexUVID = glGetAttribLocation(starShader.Program, "vertexUV");
+  GLuint starVertexPositionID = glGetAttribLocation(starShader.Program, "vertexPosition");
+  //GLuint asteroidVertexPositionID = glGetAttribLocation(asteroidsShader.Program, "vertexPosition");
+
+  GLuint starVertexUVID = glGetAttribLocation(starShader.Program, "vertexUV");
+
+  //GLuint asteroidVertexUVID = glGetAttribLocation(asteroidsShader.Program, "vertexUV");
   
   Model spaceShip((GLchar *)"assets/objects/ship.obj");
 
@@ -218,7 +257,9 @@ int main()
   Model torus((GLchar*)"assets/objects/Torus3.obj");          // ... Torus
   //Model torus((GLchar*)"assets/objects/planet.obj");          // ... Planet
 
+  GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
   GLuint starTexture = loadBMP("assets/images/env_stars.bmp");
+  //GLuint asteroidTexture = loadBMP("assets/textures/asteroids.bmp");
 
   glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 10000000000.0f);
 
@@ -257,7 +298,7 @@ int main()
         render_SpaceAsteroids(asteroidsShader, asteroids, camera);
     }
 		// Render the spaceship
-    render_SpaceShip(spaceShipShader, spaceShip, camera);
+    render_SpaceShip(spaceShipShader, spaceShip, camera, shipTexture);
     // Swap the buffers
     glfwSwapBuffers(window);
   }
