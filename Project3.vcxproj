@@ -137,6 +137,8 @@
     <None Include="packages.config" />
     <None Include="SpaceShipVertex.glsl" />
     <None Include="AsteroidsVertex.glsl" />
+    <None Include="TorusFragment.glsl" />
+    <None Include="TorusVertex.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Project3.cpp" />

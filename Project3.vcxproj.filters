@@ -28,6 +28,12 @@
     <None Include="AsteroidsFragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="TorusFragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="TorusVertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Project3.cpp">
