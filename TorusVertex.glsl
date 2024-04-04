@@ -1,4 +1,4 @@
-#version 330 core
+#version 120
 
 // Input vertex data, different for all executions of this shader.
 attribute vec3 vertexPosition;
