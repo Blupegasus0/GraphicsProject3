@@ -34,12 +34,17 @@ class Model
         
         public:
             //  Model Data 
+            glm::vec3 center;
+            float radius;
             vector<Texture> textures_loaded;	// Stores textures loaded (loaded only once)
             vector<Mesh> meshes;
             string directory;
             bool gammaCorrection;
 
             // Constructor, expects a filepath to a 3D model.
+            Model(bool gamma = false) : gammaCorrection(gamma)
+            {
+            }
             Model(GLchar* path, bool gamma = false) : gammaCorrection(gamma)
                 {
                     this->loadModel(path);
@@ -107,6 +112,7 @@ void Model::processNode(aiNode* node, const aiScene* scene)
 Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
     {
         // Data to fill
+        float minX = FLT_MIN, minY = FLT_MIN, minZ = FLT_MIN, maxX = FLT_MAX, maxY = FLT_MAX, maxZ = FLT_MAX;
         vector<Vertex> vertices;
         vector<GLuint> indices;
         vector<Texture> textures;
@@ -124,7 +130,20 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
                 vector.y = mesh->mVertices[i].y;
                 vector.z = mesh->mVertices[i].z;
                 vertex.Position = vector;
-                
+
+                if (vector.x > minX)
+                  minX = vector.x;
+                if (vector.x < maxX)
+                  maxX = vector.x;
+                if (vector.y > minY)
+                  minY = vector.y;
+                if (vector.y < maxY)
+                  maxY = vector.y;
+                if (vector.z > minZ)
+                  minZ = vector.z;
+                if (vector.z < maxZ)
+                  maxZ = vector.z;
+
                 // Normals
                 // Normals
                 if (mesh->mNormals)
@@ -194,7 +213,8 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
                                                                           "texture_specular");
                 textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
             }
-        
+        center = glm::vec3((minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2);
+        radius = glm::distance(glm::vec3(minX, minY, minZ), glm::vec3(maxX, maxY, maxZ)) / 2;
         // Return a mesh object created from the extracted mesh data
         return Mesh(vertices, indices, textures);
     }
