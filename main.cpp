@@ -21,7 +21,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define numAstroids 500
+#define numAstroids 5
 
 // Active window
 GLFWwindow *window;
@@ -33,7 +33,7 @@ GLfloat torusScale = 130.0f;
 
 // Camera
                       //x-comp,y-comp,z-comp
-Camera camera(glm::vec3(torusScale*1.0f, .0f, 0.0f));
+Camera camera(glm::vec3(torusScale * 1.0f, 5.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), 0.0f, -15);
 
 GLfloat cameraX = 0.0f;
 GLfloat cameraY = 0.0f;
@@ -43,9 +43,9 @@ GLfloat asteroidX = 0.0f;
 GLfloat asteroidY = 0.0f;
 GLfloat asteroidZ = 0.0f;
 
-GLfloat cameraXOffset = 0.0f;
-GLfloat cameraYOffset = 0.0f;
-GLfloat cameraZOffset = 0.0f;
+GLfloat shipX = 0.0f;
+GLfloat shipY = 0.0f;
+GLfloat shipZ = 0.0f;
 
 GLfloat asteroidXOffset = 0.0f;
 GLfloat asteroidYOffset = 0.0f;
@@ -53,12 +53,13 @@ GLfloat asteroidZOffset = 0.0f;
 GLfloat asteroidScale = 0.0f;
 GLfloat asteroidDisplacement = 0.0f;
 GLfloat asteroidRotation = 0.0f;
-GLfloat asteroidSpeed = 0.01f;
+GLfloat asteroidSpeed = 0.001f;
 GLfloat asteroidXRotation = 0.0f;
 GLfloat asteroidYRotation = 0.0f;
 GLfloat asteroidZRotation = 0.0f;
 
-GLfloat cameraSpeed = 0.1f;
+GLfloat cameraSpeed = 0.5f;
+GLboolean collision = false;
 
 GLfloat cameraAngle = 0.0f;
 GLfloat spaceShipAngle = 0.0f;
@@ -69,6 +70,13 @@ GLfloat shipRadius = torusScale * 1.0f;
 GLfloat asteroidRadius = torusScale * 1.0f;
 
 GLfloat spaceTime = 0.0f;
+GLfloat spaceShipAngleInPlane = 0.0f;
+GLfloat cameraAngleInPlane = 1.0f;
+glm::vec3 forwardDirection = glm::vec3(1.0f, 0.0f, 1.0f);
+
+Model spaceShip;
+
+vector <Model> asteroids;
 
 static void init_Resources()
 {
@@ -96,49 +104,19 @@ static void init_Resources()
   glEnable(GL_DEPTH_TEST);
 }
 
-//GLfloat travelCoords(GLfloat angle, GLfloat y, GLfloat z, int choice) {
-//    GLfloat ycoord, zcoord;
-//    if (choice == 0) {
-//        ycoord = ((y)*cos(glm::radians(angle)) - ((z)*sin(glm::radians(angle))));
-//        return ycoord;
-//    }
-//    else {
-//        zcoord = ((y)*sin(glm::radians(angle)) + ((z)*cos(glm::radians(angle))));
-//        return zcoord;
-//    }
-//}
-//static void render_SpaceAsteroid(Shader& shader, Model& model, Camera& camera)
-//{
-//
-//  shader.Use();
-//  glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
-//
-//  // =======================================================================
-//  // Create the model matrix
-//  // =======================================================================
-//  glm::mat4 asteroidModel = glm::mat4(1.f);
-//  asteroidRadius = (rand() % (int)torusScale) + torusScale * .5f;
-//  asteroidXOffset = rand() % 20;
-//  asteroidYOffset = rand() % 20;
-//  asteroidZOffset = rand() % 20;
-//
-//  asteroidModel = glm::translate(asteroidModel, glm::vec3(asteroidRadius * sin(glm::radians(asteroidAngle + 10)) + asteroidXOffset, 0.0f + asteroidYOffset, asteroidRadius * cos(glm::radians(asteroidAngle + 10)) + asteroidZOffset));
-//  asteroidAngle += 0.01f;
-//  // Rotate the asteroids around the axis with an angle of 1 degrees per second
-//  // =======================================================================
-//  // Pass the Model matrix, to the shader as "model"
-//  // =======================================================================
-//  glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(asteroidModel));
-//
-//  // =======================================================================
-//  // Draw the object.
-//  // =======================================================================
-//  model.Draw(shader);
-//}
-
-
 static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuint texture)
 {
+  if (collision) {
+    GLfloat movementSpeed = 0.5f; // Adjust as needed
+    shipX += movementSpeed * 10*forwardDirection.x;
+    shipZ += movementSpeed * 10 * forwardDirection.z;
+
+    // Update the camera to follow the ship
+    cameraX += movementSpeed * 10 * forwardDirection.x;
+    cameraZ += movementSpeed * 10 * forwardDirection.z;
+
+    collision = false;
+  }
   GLuint TextureID = glGetUniformLocation(shader.Program, "shipTexture");
   
   glActiveTexture(GL_TEXTURE0);
@@ -146,26 +124,17 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
   
   shader.Use();
   glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
-  
-  // =======================================================================
-  // Create the model matrix
-  // =======================================================================
+
   glm::mat4 spaceShipModel = glm::mat4(1.f);
-    spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipRadius * sin(glm::radians(spaceShipAngle + 15)),0.0f, shipRadius * cos(glm::radians(spaceShipAngle + 15))));
-    spaceShipAngle += 0.01f;
-  // Rotate the spaceship around the axis with an angle of 1 degrees per second
-  spaceShipModel = glm::rotate(spaceShipModel, glm::radians(min(spaceTime, 360.0f)), glm::vec3(1.0f, 0.f, 0.0f));
-  spaceShipModel = glm::rotate(spaceShipModel, glm::radians(min(spaceTime, 270.0f)), glm::vec3(0.0f, 1.0f, 0.0f));
-  spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 15.0f - 90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-  
-  // =======================================================================
-  // Pass the Model matrix, to the shader as "model"
-  // =======================================================================
+
+  spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
+  model.center = glm::vec3(shipX, shipY, shipZ);
+
+  spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 5.0f + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngleInPlane), glm::vec3(0.0f, 1.0f, 0.0f));
+
   glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceShipModel));
-  
-  // =======================================================================
-  // Draw the object.
-  // =======================================================================
+
   model.Draw(shader);
 }
 
@@ -173,10 +142,8 @@ static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint te
   shader.Use();
   glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 
-  glm::mat4 spaceModel = glm::mat4(1.f);
+  glm::mat4 spaceModel = glm::mat4(1.0f);
   spaceModel = glm::scale(spaceModel, glm::vec3(torusScale));
-  // rotate the torus around the y-axis at 1 degree per second
-  spaceModel = glm::rotate(spaceModel, -glm::radians(spaceTime), glm::vec3(0.0f, 1.0f, 0.0f));
 
   glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceModel));
 
@@ -184,41 +151,92 @@ static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint te
 }
 
 static void update_Camera() {
-	cameraX = cameraRadius * sin(glm::radians(cameraAngle));
-	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
-  // rotate the camera around the origin
-  camera = Camera(glm::vec3(cameraX + cameraXOffset, 0.0f + cameraYOffset, cameraZ + cameraZOffset), glm::vec3(0.0f,1.0f,0.0f), -cameraAngle,camera.Pitch);
-	cameraAngle += 0.01f;
-	if (cameraAngle > 360.0f) cameraAngle = 0.0f;
+  camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f,1.0f,0.0f), camera.Yaw, camera.Pitch);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GL_TRUE);
+  
   if (key == GLFW_KEY_W)
-    cameraAngle += 1.0f;
+  {
+    // Calculate direction vector based on ship's rotation around y-axis
+    glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
+
+    GLfloat movementSpeed = 0.5f; // Adjust as needed
+    shipX += movementSpeed * forwardDirection.x;
+    shipZ += movementSpeed * forwardDirection.z;
+
+    // Update the camera to follow the ship
+    cameraX += movementSpeed * forwardDirection.x;
+    cameraZ += movementSpeed * forwardDirection.z;
+  }
+
   if (key == GLFW_KEY_S)
-    cameraAngle -= 1.0f;
+  {
+    // Calculate direction vector based on ship's rotation around y-axis
+    glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
+
+    GLfloat movementSpeed = 0.5f; // Adjust as needed
+    shipX -= movementSpeed * forwardDirection.x;
+    shipZ -= movementSpeed * forwardDirection.z;
+
+    // Update the camera to follow the ship
+    cameraX -= movementSpeed * forwardDirection.x;
+    cameraZ -= movementSpeed * forwardDirection.z;
+  }
+  
   if (key == GLFW_KEY_A)
-    cameraRadius -= 0.1f;
+    spaceShipAngleInPlane += 1.0f;
   if (key == GLFW_KEY_D)
-    cameraRadius += 0.1f;
+    spaceShipAngleInPlane -= 1.0f;
+  
   if (key == GLFW_KEY_Q)
-    cameraYOffset += 0.1f;
+  {
+    // Rotate the camera around the ship.center
+    camera.ProcessMouseMovement(4.0f, 0.0f);
+   glm::mat2 rotationMatrix = glm::mat2(cos(glm::radians(cameraAngleInPlane)), sin(glm::radians(cameraAngleInPlane)), -sin(glm::radians(cameraAngleInPlane)), cos(glm::radians(cameraAngleInPlane)));
+    glm::vec2 rotationVector = rotationMatrix * glm::vec2(cameraX - spaceShip.center.x, cameraZ - spaceShip.center.z) + glm::vec2(spaceShip.center.x, spaceShip.center.z);
+    cameraX = rotationVector.x;
+    cameraZ = rotationVector.y;
+
+	}
+  
   if (key == GLFW_KEY_E)
-    cameraYOffset -= 0.1f;
+  {
+    // Rotate the camera around the ship.center
+    camera.ProcessMouseMovement(-4.0f, 0.0f);
+    glm::mat2 rotationMatrix = glm::mat2(cos(glm::radians(cameraAngleInPlane)), -sin(glm::radians(cameraAngleInPlane)), sin(glm::radians(cameraAngleInPlane)), cos(glm::radians(cameraAngleInPlane)));
+    glm::vec2 rotationVector = rotationMatrix * glm::vec2(cameraX - spaceShip.center.x, cameraZ - spaceShip.center.z) + glm::vec2(spaceShip.center.x, spaceShip.center.z);
+    cameraX = rotationVector.x;
+    cameraZ = rotationVector.y;
+  }
+
+  if (key == GLFW_KEY_U)
+  {
+		shipY += 0.5f;
+    cameraY += 0.5f;
+	}
+
+  if (key == GLFW_KEY_J)
+  {
+    shipY -= 0.5f;
+    cameraY -= 0.5f;
+  }
+  
   if (key == GLFW_KEY_R)
   {
-    spaceTime = 0.0f;
-    cameraXOffset = 0.0f;
-    cameraYOffset = 0.0f;
-    cameraZOffset = 0.0f;
-    cameraRadius = torusScale * 1.0f;
-    cameraAngle = 0.0f;
     spaceShipAngle = 0.0f;
-    camera.Yaw = YAW;
-    camera.Pitch = PITCH;
+    spaceShipAngleInPlane = 0.0f;
+    cameraAngle = 0.0f;
+    shipY = 0.0f;
+    
+    shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5));
+    shipZ = shipRadius * cos(glm::radians(spaceShipAngle + 5));
+    camera.Yaw = 0.0f;
+    cameraX = cameraRadius * sin(glm::radians(cameraAngle));
+    cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
   }
 }
 
@@ -235,9 +253,9 @@ int main()
 
   Shader spaceShader("SpaceVertex.glsl", "SpaceFragment.glsl");
 
-  vector <Model> asteroids;
+  Model torus((GLchar*)"assets/objects/torus.obj");
 
-  Model spaceShip((GLchar *)"assets/objects/ship.obj");
+  spaceShip = Model((GLchar*)"assets/objects/ship.obj");
 
   for (int i = 0; i < numAstroids; i++) {
 		Model asteroid((GLchar*)"assets/objects/asteroid.obj");
@@ -251,12 +269,23 @@ int main()
   for (int i = 0; i < numAstroids; i++) {
     asteroidModels[i] = glm::mat4(1.0f);
     asteroidRadius = (rand() % (int)torusScale*.85) + torusScale * .55f;
+    asteroidRadius = torusScale * 1.0f;
     asteroidAngle = (rand() % 360);
     asteroidYOffset = (rand() % 30) - 15;
-    asteroidModels[i] = glm::translate(asteroidModels[i], glm::vec3(asteroidRadius * sin(glm::radians(asteroidAngle + 20)), 0.0f + asteroidYOffset, asteroidRadius * cos(glm::radians(asteroidAngle + 20))));
+    GLfloat x = asteroidRadius * sin(glm::radians(asteroidAngle + 20));
+    GLfloat y = 0.0f + asteroidYOffset;
+    GLfloat z = asteroidRadius * cos(glm::radians(asteroidAngle + 20));
+    asteroidModels[i] = glm::translate(asteroidModels[i], glm::vec3(x, y, z));
+    asteroids[i].center = glm::vec3(x, y, z);
   }
 
-  Model torus((GLchar*)"assets/objects/torus.obj");
+  shipX = shipRadius* sin(glm::radians(spaceShipAngle + 5));
+  shipY = 0.0f;
+  shipZ = shipRadius * cos(glm::radians(spaceShipAngle + 5));
+
+  cameraX = cameraRadius * sin(glm::radians(cameraAngle));
+  cameraY = 5.0f;
+  cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
 
   GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
 
@@ -281,46 +310,35 @@ int main()
     glClearColor(.8f, .8f , .8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    render_Space(spaceShader, torus, camera, 0);
+    render_Space(spaceShader, torus, camera, NULL);
     render_SpaceShip(spaceShipShader, spaceShip, camera, shipTexture);
-
-    asteroidShader.Use();
-    glUniformMatrix4fv(glGetUniformLocation(asteroidShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+    
+    update_Camera();
 
     // Render the asteroids
     asteroidShader.Use();
+    glUniformMatrix4fv(glGetUniformLocation(asteroidShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+
     for (int i = 0; i < numAstroids; i++) {
-      // Rotate the asteroids around a random axis
-      asteroidXRotation = (rand() % 360);
-      asteroidYRotation = (rand() % 360);
-      asteroidZRotation = (rand() % 360);
       asteroidModels[i] = glm::rotate(asteroidModels[i], asteroidSpeed, glm::vec3(0.2f, 0.8f, 0.6f));
       glUniformMatrix4fv(glGetUniformLocation(asteroidShader.Program, "model"), 1,
         GL_FALSE, glm::value_ptr(asteroidModels[i]));
       asteroids[i].Draw(asteroidShader);
     }
-      
-    // Increment the time variable
-    spaceTime += .1;
-    // Update the camera to zoom out
-    if (spaceTime > 360.0f && spaceTime < 390.0f)
-    {
-      camera = Camera(glm::vec3(cameraRadius * sin(glm::radians(cameraAngle)) + cameraXOffset, 0.0f + cameraYOffset, cameraRadius * cos(glm::radians(cameraAngle)) + cameraZOffset), glm::vec3(0.0f, 1.0f, 0.0f), -cameraAngle, camera.Pitch);
-    }
 
-    // Update the camera to the right and up of the spaceship and look at it from the bottom left corner
-    else if (spaceTime > 390.0f && spaceTime < 420.0f)
-    {
-      cameraAngle += 0.05f;
-      cameraRadius += 0.01f;
-      camera = Camera(glm::vec3(cameraRadius * sin(glm::radians(cameraAngle) + cameraXOffset), 0.0f + cameraYOffset, cameraRadius * cos(glm::radians(cameraAngle)) + cameraZOffset), glm::vec3(0.0f, 1.0f, 0.0f), -cameraAngle, camera.Pitch);
+    for (int i = 0; i < numAstroids; i++) {
+      // Check for collision
+      if (glm::distance(spaceShip.center, asteroids[i].center) <= spaceShip.radius + asteroids[i].radius) {
+        std::cout << "Collision detected" << std::endl;
+        collision = true;
+        break;
+      }
     }
-    else {
-      update_Camera();
-    }
-    
     // Swap the buffers
     glfwSwapBuffers(window);
+
+    // Increment the time variable
+    spaceTime += 0.1f;
   }
 
   glfwTerminate();
