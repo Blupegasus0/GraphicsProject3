@@ -28,10 +28,10 @@ GLFWwindow *window;
 GLuint sWidth = 1300, sHeight = 720;
 
 static const GLfloat starScaleZ = 500000.0f;
-static const GLfloat starScaleXY = starScaleZ*2;
+static const GLfloat starScaleXY = starScaleZ * 2;
 
 // Camera
-                     //x-comp,y-comp,z-comp
+// x-comp,y-comp,z-comp
 Camera camera(glm::vec3(0.0f, starScaleXY, 10.0f));
 
 GLfloat spaceTime = 350.0f; // Time variable
@@ -73,68 +73,67 @@ static void init_Resources()
   glEnable(GL_DEPTH_TEST);
 
   // Set up the moon's sphere characteristics
-  angle = 0.05;               // Angle to calculate rotation around the centre of the scene
+  angle = 0.05; // Angle to calculate rotation around the centre of the scene
   cameraAngle = 0.4;
-  shipY = ((starScaleXY)*cos(angle * M_PI / 180));   // Initial x-location of moon
-  shipZ = ((starScaleZ)*sin(angle * M_PI / 180));   // Initial z-location of moon
+  shipY = ((starScaleXY)*cos(angle * M_PI / 180)); // Initial x-location of moon
+  shipZ = ((starScaleZ)*sin(angle * M_PI / 180));  // Initial z-location of moon
 }
 
-void updateAngle() {
-    GLfloat inc = 0.1f;
+void updateAngle()
+{
+  GLfloat inc = 0.1f;
 
-    angle += inc;
-    if (angle > 360)
-        angle = inc;
+  angle += inc;
+  if (angle > 360)
+    angle = inc;
 }
 
-static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuint texture)
+static void render_SpaceShip(Shader &shader, Model &model, Camera &camera, GLuint texture)
 {
   GLuint TextureID = glGetUniformLocation(shader.Program, "shipTexture");
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture);
 
+  shader.Use();
+  glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 
+  // =======================================================================
+  // Create the model matrix
+  // =======================================================================
+  glm::mat4 spaceShipModel = glm::mat4(1.f);
 
+  // spaceShipModel = glm::translate(spaceShipModel, glm::vec3(0.0f, ogshipY, 0.0f));
 
-	shader.Use();
-	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+  shipY = (starScaleXY * cos(-angle * M_PI / 180));
+  shipZ = (starScaleZ * sin(-angle * M_PI / 180));
 
-    // =======================================================================
-// Create the model matrix
-// =======================================================================
-    glm::mat4 spaceShipModel = glm::mat4(1.f);
+  camera.Position = glm::vec3(shipX + 2.8f, shipY + 2.8f, shipZ + 10.f);
+  /*/if (cameraAngle < -90.0)
+      camera.Up = glm::vec3(0.0f - 1.0f, 0.0f);
+  else*/
+  camera.ProcessMouseMovement(0.0f, -cameraAngle, false);
+  if ((camera.Pitch < 90.0f) && (camera.Pitch >= 0.0f))
+    camera.Up = glm::vec3(0.0, 1.0, 0.0);
+  else if ((camera.Pitch < 0.0f) && (camera.Pitch >= -90.0f))
+    camera.Up = glm::vec3(0.0, 0.0, -1.0);
+  else if ((camera.Pitch < -90.0f) && (camera.Pitch >= -180.0f))
+    camera.Up = glm::vec3(0.0, -1.0, 0.0);
+  else if ((camera.Pitch < 180.0f) && (camera.Pitch >= 90.0f))
+    camera.Up = glm::vec3(0.0, 0.0, 1.0);
+  if (camera.Pitch == -180.0)
+  {
+    camera.Pitch = 180.0;
+  }
+  // camera.Front = glm::vec3(shipX, shipY, shipZ);
+  std::cout << "Ship: " << shipX << " " << shipY << " " << shipZ << " " << endl;
+  std::cout << "Camera: " << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << endl;
+  std::cout << endl
+            << endl
+            << endl;
 
-    //spaceShipModel = glm::translate(spaceShipModel, glm::vec3(0.0f, ogshipY, 0.0f));
-
-    shipY = (starScaleXY * cos(-angle * M_PI / 180));
-    shipZ = (starScaleZ * sin(-angle * M_PI / 180));
-
-
-    camera.Position = glm::vec3(shipX + 2.8f, shipY + 2.8f, shipZ + 10.f);
-    /*/if (cameraAngle < -90.0)
-        camera.Up = glm::vec3(0.0f - 1.0f, 0.0f);
-    else*/
-    camera.ProcessMouseMovement(0.0f, -cameraAngle, false);
-    if ((camera.Pitch < 90.0f) && (camera.Pitch >= 0.0f))
-        camera.Up = glm::vec3(0.0, 1.0, 0.0);
-    else if ((camera.Pitch < 0.0f) && (camera.Pitch >= -90.0f))
-        camera.Up = glm::vec3(0.0, 0.0, -1.0);
-    else if ((camera.Pitch < -90.0f) && (camera.Pitch >= -180.0f))
-        camera.Up = glm::vec3(0.0, -1.0, 0.0);
-    else if ((camera.Pitch < 180.0f) && (camera.Pitch >= 90.0f))
-        camera.Up = glm::vec3(0.0, 0.0, 1.0);
-    if (camera.Pitch == -180.0){
-        camera.Pitch = 180.0;
-    }
-    //camera.Front = glm::vec3(shipX, shipY, shipZ);
-    std::cout << "Ship: " << shipX << " " << shipY << " " << shipZ << " " << endl;
-    std::cout << "Camera: " << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << " " << endl;
-    std::cout << endl << endl << endl;
-    
-   // camera.Pitch = glm::radians(shipY+shipZ);
-    spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
-    
+  // camera.Pitch = glm::radians(shipY+shipZ);
+  spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
 
   spaceShipModel = glm::scale(spaceShipModel, glm::vec3(10.5f, 10.5f, 10.5f));
 
@@ -145,31 +144,27 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 
   spaceShipModel = glm::translate(spaceShipModel, glm::vec3(0.0f, -10.5f, 0.0f));
 
+  // =======================================================================
+  // Pass the Model matrix, to the shader as "model"
+  // =======================================================================
+  glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceShipModel));
 
-  
-	// =======================================================================
-	// Pass the Model matrix, to the shader as "model"
-	// =======================================================================
-	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceShipModel));
+  // =======================================================================
+  // Draw the object.
+  // =======================================================================
+  model.Draw(shader);
 
-	// =======================================================================
-	// Draw the object.
-	// =======================================================================
-	model.Draw(shader);
-
-
-
-    updateAngle();
+  updateAngle();
 }
 
-static void render_SpaceAsteroids(Shader& shader, Model& model, Camera& camera)
+static void render_SpaceAsteroids(Shader &shader, Model &model, Camera &camera)
 {
-   /* //Pass location of texture to the shader as uniform variable
-    GLuint TextureID = glGetUniformLocation(shader.Program, "asteroidTexture");
+  /* //Pass location of texture to the shader as uniform variable
+   GLuint TextureID = glGetUniformLocation(shader.Program, "asteroidTexture");
 
-    //Bind the texture to the model
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);*/
+   //Bind the texture to the model
+   glActiveTexture(GL_TEXTURE0);
+   glBindTexture(GL_TEXTURE_2D, texture);*/
 
   shader.Use();
   glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
@@ -195,49 +190,45 @@ static void render_SpaceAsteroids(Shader& shader, Model& model, Camera& camera)
   model.Draw(shader);
 }
 
-static void render_Stars(Shader& shader, Model& model, Camera& camera, GLuint texture)
+static void render_Stars(Shader &shader, Model &model, Camera &camera, GLuint texture)
 {
-    //Pass location of texture to the shader as uniform variable
-    GLuint TextureID = glGetUniformLocation(shader.Program, "starTexture");
+  // Pass location of texture to the shader as uniform variable
+  GLuint TextureID = glGetUniformLocation(shader.Program, "starTexture");
 
-    //Bind the texture to the model
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+  // Bind the texture to the model
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, texture);
 
-    shader.Use();
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+  shader.Use();
+  glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 
-    // =======================================================================
-    // Create the model matrix
-    // =======================================================================
-    glm::mat4 starModel = glm::mat4(1);
+  // =======================================================================
+  // Create the model matrix
+  // =======================================================================
+  glm::mat4 starModel = glm::mat4(1);
 
-   starModel = glm::rotate(starModel, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    //Increase the size of the torus
-    starModel = glm::scale(starModel, glm::vec3(starScaleXY, starScaleXY, starScaleZ)); //using Torus3.obj
+  starModel = glm::rotate(starModel, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  // Increase the size of the torus
+  starModel = glm::scale(starModel, glm::vec3(starScaleXY, starScaleXY, starScaleZ)); // using Torus3.obj
 
-  
-    //Rotate torus
-    starAngle += 0.01;
-    if (starAngle > 360) starAngle = 0.01;
-    //starModel = glm::rotate(starModel, -starAngle, glm::vec3(0.0f, 1.0f, 0.0f)); //Let the torus continuously rotate around the y-axis
-    
+  // Rotate torus
+  starAngle += 0.01;
+  if (starAngle > 360)
+    starAngle = 0.01;
+  // starModel = glm::rotate(starModel, -starAngle, glm::vec3(0.0f, 1.0f, 0.0f)); //Let the torus continuously rotate around the y-axis
 
-    
+  // =======================================================================
+  // Pass the Model matrix, to the shader as "model"
+  // =======================================================================
+  glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(starModel));
 
-    // =======================================================================
-    // Pass the Model matrix, to the shader as "model"
-    // =======================================================================
-    glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(starModel));
-
-    // =======================================================================
-    // Draw the object.
-    // =======================================================================
-    model.Draw(shader);
-
+  // =======================================================================
+  // Draw the object.
+  // =======================================================================
+  model.Draw(shader);
 }
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GL_TRUE);
@@ -262,13 +253,13 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     camera.Pitch = PITCH;
   }
   if (key == GLFW_KEY_Z)
-		camera.ProcessMouseMovement(-1.0f, 0.0f);
+    camera.ProcessMouseMovement(-1.0f, 0.0f);
   if (key == GLFW_KEY_X)
     camera.ProcessMouseMovement(1.0f, 0.0f);
   if (key == GLFW_KEY_C)
-		camera.ProcessMouseMovement(0.0f, -1.0f);
+    camera.ProcessMouseMovement(0.0f, -1.0f);
   if (key == GLFW_KEY_V)
-		camera.ProcessMouseMovement(0.0f, 1.0f);
+    camera.ProcessMouseMovement(0.0f, 1.0f);
 }
 
 // The MAIN function, from here we start our application and run the loop
@@ -285,22 +276,22 @@ int main()
   Shader starShader("TorusVertex.glsl", "TorusFragment.glsl");
 
   GLuint starVertexPositionID = glGetAttribLocation(starShader.Program, "vertexPosition");
-  //GLuint asteroidVertexPositionID = glGetAttribLocation(asteroidsShader.Program, "vertexPosition");
+  // GLuint asteroidVertexPositionID = glGetAttribLocation(asteroidsShader.Program, "vertexPosition");
 
   GLuint starVertexUVID = glGetAttribLocation(starShader.Program, "vertexUV");
 
-  //GLuint asteroidVertexUVID = glGetAttribLocation(asteroidsShader.Program, "vertexUV");
-  
+  // GLuint asteroidVertexUVID = glGetAttribLocation(asteroidsShader.Program, "vertexUV");
+
   Model spaceShip((GLchar *)"assets/objects/ship.obj");
 
-  Model asteroids((GLchar*)"assets/objects/asteroids.obj");
+  Model asteroids((GLchar *)"assets/objects/asteroids.obj");
 
-  Model torus((GLchar*)"assets/objects/Torus3.obj");          // ... Torus
-  //Model torus((GLchar*)"assets/objects/planet.obj");          // ... Planet
+  Model torus((GLchar *)"assets/objects/Torus3.obj"); // ... Torus
+  // Model torus((GLchar*)"assets/objects/planet.obj");          // ... Planet
 
   GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
   GLuint starTexture = loadBMP("assets/images/env_stars.bmp");
-  //GLuint asteroidTexture = loadBMP("assets/textures/asteroids.bmp");
+  // GLuint asteroidTexture = loadBMP("assets/textures/asteroids.bmp");
 
   glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 10000000000.0f);
 
@@ -324,7 +315,7 @@ int main()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Increment the time variable
     spaceTime += .1;
-    //Render the stars
+    // Render the stars
     render_Stars(starShader, torus, camera, starTexture);
     // Update the camera to zoom out
     if (spaceTime > 360.0f && spaceTime < 363.0f)
@@ -335,10 +326,11 @@ int main()
     // check if the spaceship and the asteroids have collided and reset the time variable
 
     // Render the asteroids
-    if (spaceTime > 393.0f) {
-        render_SpaceAsteroids(asteroidsShader, asteroids, camera);
+    if (spaceTime > 393.0f)
+    {
+      render_SpaceAsteroids(asteroidsShader, asteroids, camera);
     }
-		// Render the spaceship
+    // Render the spaceship
     render_SpaceShip(spaceShipShader, spaceShip, camera, shipTexture);
     // Swap the buffers
     glfwSwapBuffers(window);
