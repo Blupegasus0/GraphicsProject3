@@ -1,11 +1,6 @@
-#version 330 core
-
-in vec2 TextureCoords;
-out vec4 color;
-
-uniform sampler2D Texture;
+#version 120
 
 void main()
-{
-    color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-}
+    {
+        gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+    }

@@ -1,10 +1,14 @@
-#version 330 core
-in vec2 TextureCoords;
-out vec4 color;
+#version 120
 
-uniform sampler2D texture;
+// Interpolated values from the vertex shaders
+varying vec2 UV;
+varying vec3 Position;
+
+// Values that stay constant for the whole mesh.
+uniform sampler2D spaceTexture;
 
 void main()
-{
-    color = texture(texture, TextureCoords);
-}
+    {
+            gl_FragColor = texture2D( spaceTexture, UV );
+       
+    }

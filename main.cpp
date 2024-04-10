@@ -46,6 +46,9 @@ GLfloat asteroidZ = 0.0f;
 GLfloat shipX = 0.0f;
 GLfloat shipY = 0.0f;
 GLfloat shipZ = 0.0f;
+GLfloat nextShipX = 0.0f;
+GLfloat nextShipY = 0.0f;
+GLfloat nextShipZ = 0.0f;
 
 GLfloat asteroidXOffset = 0.0f;
 GLfloat asteroidYOffset = 0.0f;
@@ -73,6 +76,15 @@ GLfloat spaceTime = 0.0f;
 GLfloat spaceShipAngleInPlane = 0.0f;
 GLfloat cameraAngleInPlane = 1.0f;
 glm::vec3 forwardDirection = glm::vec3(1.0f, 0.0f, 1.0f);
+
+GLfloat torusOuterRadius = torusScale;
+GLfloat torusInnerRadius = 0.5;
+GLfloat torusOuterRingRadius;
+GLfloat torusInnerRingRadius;
+vector<vector <GLfloat>> torusOuterRingX;
+vector<vector <GLfloat>> torusOuterRingZ;
+vector<vector <GLfloat>> torusInnerRingX;
+vector<vector <GLfloat>> torusInnerRingZ;
 
 Model spaceShip;
 
@@ -130,6 +142,8 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
   spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
   model.center = glm::vec3(shipX, shipY, shipZ);
 
+  //std::cout << "X: " << shipX << " Y: " << shipY << " Z: " << shipZ << endl;
+
   spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 5.0f + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
   spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngleInPlane), glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -139,6 +153,10 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 }
 
 static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint texture) {
+    GLuint TextureID = glGetUniformLocation(shader.Program, "spaceTexture");
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
   shader.Use();
   glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 
@@ -146,7 +164,7 @@ static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint te
   spaceModel = glm::scale(spaceModel, glm::vec3(torusScale));
 
   glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceModel));
-
+  //std::cout << "Torus Radius: " << model.radius << endl;
   model.Draw(shader);
 }
 
@@ -154,44 +172,99 @@ static void update_Camera() {
   camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f,1.0f,0.0f), camera.Yaw, camera.Pitch);
 }
 
+
+static GLfloat getAngle() {
+    glm::vec3 shipPosition = glm::vec3(nextShipX, 0.0f, nextShipZ);
+    GLfloat shipMagnitude = sqrt((nextShipX * nextShipX) + (nextShipZ * nextShipZ));
+    //cout << "Ship Magnitude: " << shipMagnitude << endl;
+    //cout << "Cosine of Angle: " << (nextShipX / shipMagnitude) << endl;
+    return (acos(nextShipX / shipMagnitude)*180*7)/22;
+
+
+}
+
+static GLboolean outOfBounds(GLfloat angle) {
+    GLfloat x, z, magnitude;
+    /*cout << "Angle: " << angle << endl;
+    cout << "X: " << shipX << endl;
+    cout << "Y: " << shipY << endl;
+    cout << "Z: " << shipZ << endl;
+    cout << "Next X: " << nextShipX << endl;
+    cout << "Next Y: " << nextShipY << endl;
+    cout << "Next Z: " << nextShipZ << endl;*/
+    if (nextShipZ >= 0) {
+        x = torusScale * cos(angle * M_PI / 180);
+        z = torusScale * sin(angle * M_PI / 180);
+        magnitude = sqrt(pow((x - nextShipX), 2) + pow((nextShipY), 2) + pow((z - nextShipZ), 2));
+        if (magnitude >= torusInnerRadius)
+            return true;
+        else
+            return false;
+    }
+    if (nextShipZ < 0) {
+        x = torusScale * cos(-angle * M_PI / 180);
+        z = torusScale * sin(-angle * M_PI / 180);
+        magnitude = sqrt(pow((x - nextShipX), 2) + pow((nextShipY), 2) + pow((z - nextShipZ), 2));
+        if (magnitude >= torusInnerRadius)
+            return true;
+        else
+            return false;
+    }
+
+}
+
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GL_TRUE);
-  
-  if (key == GLFW_KEY_W)
-  {
-    // Calculate direction vector based on ship's rotation around y-axis
-    glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
 
-    GLfloat movementSpeed = 0.5f; // Adjust as needed
-    shipX += movementSpeed * forwardDirection.x;
-    shipZ += movementSpeed * forwardDirection.z;
+   if (key == GLFW_KEY_W)
+      {
+           glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
 
-    // Update the camera to follow the ship
-    cameraX += movementSpeed * forwardDirection.x;
-    cameraZ += movementSpeed * forwardDirection.z;
-  }
+           GLfloat movementSpeed = 0.5f; // Adjust as needed
+           nextShipX = shipX + movementSpeed * forwardDirection.x;
+           nextShipY = shipY;
+           nextShipZ = shipZ + movementSpeed * forwardDirection.z;
 
-  if (key == GLFW_KEY_S)
-  {
-    // Calculate direction vector based on ship's rotation around y-axis
-    glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
+           if (!outOfBounds(getAngle())) {
+               GLfloat movementSpeed = 0.5f; // Adjust as needed
+               shipX += movementSpeed * forwardDirection.x;
+               shipZ += movementSpeed * forwardDirection.z;
 
-    GLfloat movementSpeed = 0.5f; // Adjust as needed
-    shipX -= movementSpeed * forwardDirection.x;
-    shipZ -= movementSpeed * forwardDirection.z;
+               // Update the camera to follow the ship
+               cameraX += movementSpeed * forwardDirection.x;
+               cameraZ += movementSpeed * forwardDirection.z;
 
-    // Update the camera to follow the ship
-    cameraX -= movementSpeed * forwardDirection.x;
-    cameraZ -= movementSpeed * forwardDirection.z;
-  }
-  
-  if (key == GLFW_KEY_A)
-    spaceShipAngleInPlane += 1.0f;
-  if (key == GLFW_KEY_D)
-    spaceShipAngleInPlane -= 1.0f;
-  
+           }
+      }
+
+      if (key == GLFW_KEY_S)
+      {
+          // Calculate direction vector based on ship's rotation around y-axis
+          glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
+
+          GLfloat movementSpeed = 0.5f; // Adjust as needed
+          nextShipX = shipX - movementSpeed * forwardDirection.x;
+          nextShipZ = shipZ - movementSpeed * forwardDirection.z;
+
+          if (!outOfBounds(getAngle())) {
+              GLfloat movementSpeed = 0.5f; // Adjust as needed
+              shipX -= movementSpeed * forwardDirection.x;
+              shipZ -= movementSpeed * forwardDirection.z;
+
+              // Update the camera to follow the ship
+              cameraX -= movementSpeed * forwardDirection.x;
+              cameraZ -= movementSpeed * forwardDirection.z;
+
+          }
+      }
+
+    if (key == GLFW_KEY_A)
+        spaceShipAngleInPlane += 1.0f;
+    if (key == GLFW_KEY_D)
+        spaceShipAngleInPlane -= 1.0f;
+
   if (key == GLFW_KEY_Q)
   {
     // Rotate the camera around the ship.center
@@ -215,14 +288,24 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
   if (key == GLFW_KEY_U)
   {
-		shipY += 0.5f;
-    cameraY += 0.5f;
+      nextShipX = shipX;
+      nextShipY = shipY + 0.5f;
+      nextShipZ = shipZ;
+      if (!outOfBounds(getAngle())) {
+          shipY += 0.5f;
+          cameraY += 0.5f;
+      }
 	}
 
   if (key == GLFW_KEY_J)
   {
-    shipY -= 0.5f;
-    cameraY -= 0.5f;
+      nextShipX = shipX;
+      nextShipY = shipY - 0.5f;
+      nextShipZ = shipZ;
+      if (!outOfBounds(getAngle())) {
+          shipY -= 0.5f;
+          cameraY -= 0.5f;
+      }
   }
   
   if (key == GLFW_KEY_R)
@@ -254,6 +337,15 @@ int main()
   Shader spaceShader("SpaceVertex.glsl", "SpaceFragment.glsl");
 
   Model torus((GLchar*)"assets/objects/torus.obj");
+
+  //torusOuterRing = torusScale * torus.radius * 2;
+  //torusInnerRing = (4 * torusOuterRadius) - torusOuterRing;
+  //torusInnerRadius = (torusOuterRing - torusInnerRing) / M_PI;
+
+  torusOuterRingRadius = ((((torus.radius) * torusScale * .75) - torusScale)*.75) + torusScale;
+  torusInnerRadius = torusOuterRingRadius - torusOuterRadius;
+
+  //torusOuterBound();
 
   spaceShip = Model((GLchar*)"assets/objects/ship.obj");
 
@@ -288,6 +380,7 @@ int main()
   cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
 
   GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
+  GLuint spaceTexture = loadBMP("assets/images/env_stars.bmp");
 
   glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 1000000.0f);
 
@@ -310,7 +403,7 @@ int main()
     glClearColor(.8f, .8f , .8f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    render_Space(spaceShader, torus, camera, NULL);
+    render_Space(spaceShader, torus, camera, spaceTexture);
     render_SpaceShip(spaceShipShader, spaceShip, camera, shipTexture);
     
     update_Camera();
