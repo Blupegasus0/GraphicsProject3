@@ -1,16 +1,26 @@
-#version 330 core
+#version 120
 
-layout (location = 0) in vec3 position;
-layout (location = 2) in vec2 textureCoords;
+// Input vertex data, different for all executions of this shader.
+attribute vec3 vertexPosition;
+attribute vec2 vertexUV;
 
-out vec2 TextureCoords;
+// Output data ; will be interpolated for each fragment.
+varying vec2 UV;
+varying vec3 Position;
 
+// Values that stay constant for the whole mesh.
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 
 void main()
-{
-    gl_Position = projection * view * model * vec4(position, 1.0f);
-    TextureCoords = textureCoords;
-}
+    {
+        // Output position of the vertex, in clip space : MVP * position
+        gl_Position = projection * view * model * vec4(vertexPosition, 1.0f); 
+        
+        // UV of the vertex.
+        UV = vertexUV;
+        
+        // Position of the vertex.
+        Position = vertexPosition;
+    }

@@ -8,5 +8,5 @@ uniform sampler2D shipTexture;
 void main()
 {
     //color = texture(shipTexture, TextureCoords);
-    color = vec4(1.0, 0.0, 0.0, 1.0);
+    color = vec4(0.0, 1.0, 0.0, 1.0);
 }
