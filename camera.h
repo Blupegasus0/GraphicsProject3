@@ -38,9 +38,11 @@ public:
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
+
     // Eular Angles
     GLfloat Yaw;
     GLfloat Pitch;
+
     // Camera options
     GLfloat MovementSpeed;
     GLfloat MouseSensitivity;
