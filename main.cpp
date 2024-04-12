@@ -22,6 +22,7 @@
 #endif
 
 #define numAstroids 50
+const GLfloat shipYLimit = 20;
 
 // Active window
 GLFWwindow* window;
@@ -169,11 +170,11 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 	}
 
 	shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5));
-	shipY = 0.0f;
+	//shipY = 0.0f;
 	shipZ = shipRadius * cos(glm::radians(spaceShipAngle + 5));
 
 	cameraX = cameraRadius * sin(glm::radians(cameraAngle));
-	cameraY = 5.0f;
+	//cameraY = 5.0f;
 	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
 	//
 
@@ -255,45 +256,32 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
+	// Vertical movement
 	if (key == GLFW_KEY_W)
 	{
-		glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
-
-		GLfloat movementSpeed = 0.5f; // Adjust as needed
-		nextShipX = shipX + movementSpeed * forwardDirection.x;
-		nextShipY = shipY;
-		nextShipZ = shipZ + movementSpeed * forwardDirection.z;
-
-		if (!outOfBounds(getAngle())) {
-			GLfloat movementSpeed = 0.5f; // Adjust as needed
-			shipX += movementSpeed * forwardDirection.x;
-			shipZ += movementSpeed * forwardDirection.z;
-
-			// Update the camera to follow the ship
-			cameraX += movementSpeed * forwardDirection.x;
-			cameraZ += movementSpeed * forwardDirection.z;
-
+		//not working
+		// move ship up
+		nextShipX = shipX;
+		nextShipY = shipY + 0.5f;
+		nextShipZ = shipZ;
+		//if (!outOfBounds(getAngle())) {
+		if (shipY < shipYLimit) {
+			shipY += 0.5f;
+			cameraY += 0.5f;
 		}
 	}
 
 	if (key == GLFW_KEY_S)
 	{
-		// Calculate direction vector based on ship's rotation around y-axis
-		glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
-
-		GLfloat movementSpeed = 0.5f; // Adjust as needed
-		nextShipX = shipX - movementSpeed * forwardDirection.x;
-		nextShipZ = shipZ - movementSpeed * forwardDirection.z;
-
-		if (!outOfBounds(getAngle())) {
-			GLfloat movementSpeed = 0.5f; // Adjust as needed
-			shipX -= movementSpeed * forwardDirection.x;
-			shipZ -= movementSpeed * forwardDirection.z;
-
-			// Update the camera to follow the ship
-			cameraX -= movementSpeed * forwardDirection.x;
-			cameraZ -= movementSpeed * forwardDirection.z;
-
+		//not working
+		// move ship down
+		nextShipX = shipX;
+		nextShipY = shipY - 0.5f;
+		nextShipZ = shipZ;
+		//if (!outOfBounds(getAngle())) {
+		if (shipY > -shipYLimit) {
+			shipY -= 0.5f;
+			cameraY -= 0.5f;
 		}
 	}
 
@@ -326,31 +314,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		cameraZ = rotationVector.y;
 	}
 
-	if (key == GLFW_KEY_U)
-	{
-		//not working
-		// move ship up
-		nextShipX = shipX;
-		nextShipY = shipY + 0.5f;
-		nextShipZ = shipZ;
-		if (!outOfBounds(getAngle())) {
-			shipY += 0.5f;
-			cameraY += 0.5f;
-		}
-	}
 
-	if (key == GLFW_KEY_J)
-	{
-		//not working
-		// move ship down
-		nextShipX = shipX;
-		nextShipY = shipY - 0.5f;
-		nextShipZ = shipZ;
-		if (!outOfBounds(getAngle())) {
-			shipY -= 0.5f;
-			cameraY -= 0.5f;
-		}
-	}
 
 	if (key == GLFW_KEY_R)
 	{
@@ -485,7 +449,8 @@ int main()
 	} // running loop
 
 	// Print score
-	cout << "Score: " << (int)spaceTime << endl;
+	int score = (int)spaceTime;
+	cout << "Score: " << score << endl;
 	
 	glfwTerminate();
 	return 0;
