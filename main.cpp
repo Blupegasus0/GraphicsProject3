@@ -485,7 +485,7 @@ int main()
 	} // running loop
 
 	// Print score
-	cout << "Score: " << (int)spaceTime/10 << endl;
+	cout << "Score: " << (int)spaceTime << endl;
 	
 	glfwTerminate();
 	return 0;
