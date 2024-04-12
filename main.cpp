@@ -56,7 +56,7 @@ GLfloat asteroidZOffset = 0.0f;
 GLfloat asteroidScale = 0.0f;
 GLfloat asteroidDisplacement = 0.0f;
 GLfloat asteroidRotation = 0.0f;
-GLfloat asteroidSpeed = 0.001f;
+GLfloat asteroidSpeed = .01f;
 GLfloat asteroidXRotation = 0.0f;
 GLfloat asteroidYRotation = 0.0f;
 GLfloat asteroidZRotation = 0.0f;
@@ -86,6 +86,7 @@ vector<vector <GLfloat>> torusOuterRingZ;
 vector<vector <GLfloat>> torusInnerRingX;
 vector<vector <GLfloat>> torusInnerRingZ;
 
+vector<vector <glm::vec3>> asteroidsData(numAstroids);
 Model spaceShip;
 
 vector <Model> asteroids;
@@ -205,7 +206,6 @@ static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint te
 static void update_Camera() {
 	camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), camera.Yaw, camera.Pitch);
 }
-
 
 static GLfloat getAngle() {
 	glm::vec3 shipPosition = glm::vec3(nextShipX, 0.0f, nextShipZ);
@@ -407,6 +407,14 @@ int main()
 		GLfloat z = asteroidRadius * cos(glm::radians(asteroidAngle + 20));
 		asteroidModels[i] = glm::translate(asteroidModels[i], glm::vec3(x, y, z));
 		asteroids[i].center = glm::vec3(x, y, z);
+	}
+	for (int i = 0; i < numAstroids; i++) {
+		asteroidRadius = (rand() % (int)torusScale * .85) + torusScale * .55f;
+		asteroidAngle = (rand() % 360);
+		asteroidYOffset = (torusScale / 4) * glm::sin(rand() % 360);
+		glm::vec3(.4, .6, .8);
+		asteroidsData[i].push_back(glm::vec3(asteroidRadius, asteroidAngle, asteroidYOffset));
+		asteroidsData[i].push_back(glm::vec3(rand() % 1000, rand() % 1000, rand() % 1000));
 	}
 
 	shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5));
