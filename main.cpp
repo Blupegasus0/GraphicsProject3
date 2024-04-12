@@ -177,8 +177,10 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 	spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
 	model.center = glm::vec3(shipX, shipY, shipZ);
 
-  spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 5.0f + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-  spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngleInPlane), glm::vec3(0.0f, 1.0f, 0.0f));
+	//std::cout << "X: " << shipX << " Y: " << shipY << " Z: " << shipZ << endl;
+
+	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 5.0f + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngleInPlane), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceShipModel));
 
@@ -323,6 +325,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 	if (key == GLFW_KEY_U)
 	{
+		//not working
+		// move ship up
 		nextShipX = shipX;
 		nextShipY = shipY + 0.5f;
 		nextShipZ = shipZ;
@@ -334,6 +338,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 	if (key == GLFW_KEY_J)
 	{
+		//not working
+		// move ship down
 		nextShipX = shipX;
 		nextShipY = shipY - 0.5f;
 		nextShipZ = shipZ;
@@ -394,14 +400,18 @@ int main()
 
 	srand(glfwGetTime());
 
-  for (int i = 0; i < numAstroids; i++) {
-    asteroidRadius = (rand() % (int)torusScale*.85) + torusScale * .55f;
-    asteroidAngle = (rand() % 360);
-    asteroidYOffset = (torusScale / 4) * glm::sin(rand() % 360);
-    glm::vec3(.4, .6, .8);
-    asteroidsData[i].push_back(glm::vec3(asteroidRadius, asteroidAngle, asteroidYOffset));
-    asteroidsData[i].push_back(glm::vec3(rand() % 1000, rand() % 1000, rand() % 1000));
-  }
+	for (int i = 0; i < numAstroids; i++) {
+		asteroidModels[i] = glm::mat4(1.0f);
+		asteroidRadius = (rand() % (int)torusScale * .85) + torusScale * .55f;
+		asteroidRadius = torusScale * 1.0f;
+		asteroidAngle = (rand() % 360);
+		asteroidYOffset = (rand() % 30) - 15;
+		GLfloat x = asteroidRadius * sin(glm::radians(asteroidAngle + 20));
+		GLfloat y = 0.0f + asteroidYOffset;
+		GLfloat z = asteroidRadius * cos(glm::radians(asteroidAngle + 20));
+		asteroidModels[i] = glm::translate(asteroidModels[i], glm::vec3(x, y, z));
+		asteroids[i].center = glm::vec3(x, y, z);
+	}
 
 	shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5));
 	shipY = 0.0f;
@@ -411,9 +421,8 @@ int main()
 	cameraY = 5.0f;
 	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
 
-  GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
-  GLuint asteroidTexture = loadBMP("assets/textures/asteroid.bmp");
-  GLuint spaceTexture = loadBMP("assets/images/env_stars.bmp");
+	GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
+	GLuint spaceTexture = loadBMP("assets/images/env_stars.bmp");
 
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 1000000.0f);
 
@@ -445,36 +454,12 @@ int main()
 		asteroidShader.Use();
 		glUniformMatrix4fv(glGetUniformLocation(asteroidShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 
-    GLuint TextureID = glGetUniformLocation(asteroidShader.Program, "asteroidTexture");
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, asteroidTexture);
-
-    for (int i = 0; i < numAstroids; i++) {
-      asteroidModels[i] = glm::mat4(1.0f);
-      GLdouble asteroidXRotation = rand() % 1000;
-      GLdouble asteroidYRotation = rand() % 1000;
-      GLdouble asteroidZRotation = rand() % 1000;
-      asteroidRadius = asteroidsData[i][0].x;
-      asteroidAngle = asteroidsData[i][0].y;
-      asteroidYOffset = asteroidsData[i][0].z;
-      GLfloat x = asteroidRadius * sin(glm::radians(asteroidAngle + 20));
-      GLfloat z = asteroidRadius * cos(glm::radians(asteroidAngle + 20));
-
-      asteroidModels[i] = glm::translate(asteroidModels[i], glm::vec3(-x, asteroidYOffset, z));
-      asteroids[i].center = glm::vec3(-x, asteroidYOffset, z);
-
-      asteroidAngle += 0.1f;
-      if (asteroidAngle > 360.0f) {
-				asteroidAngle = 0.0f;
-			}
-      asteroidsData[i][0].y = asteroidAngle;
-      asteroidModels[i] = glm::rotate(asteroidModels[i], spaceTime/10, glm::normalize(glm::vec3(asteroidsData[i][1].x, asteroidsData[i][1].y, asteroidsData[i][1].z)));
-      glUniformMatrix4fv(glGetUniformLocation(asteroidShader.Program, "model"), 1,
-        GL_FALSE, glm::value_ptr(asteroidModels[i]));
-      asteroids[i].Draw(asteroidShader);
-      asteroidSpeed += 0.0001f;
-    }
+		for (int i = 0; i < numAstroids; i++) {
+			asteroidModels[i] = glm::rotate(asteroidModels[i], asteroidSpeed, glm::vec3(0.2f, 0.8f, 0.6f));
+			glUniformMatrix4fv(glGetUniformLocation(asteroidShader.Program, "model"), 1,
+				GL_FALSE, glm::value_ptr(asteroidModels[i]));
+			asteroids[i].Draw(asteroidShader);
+		}
 
 		for (int i = 0; i < numAstroids; i++) {
 			// Check for collision
