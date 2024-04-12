@@ -56,7 +56,7 @@ GLfloat asteroidZOffset = 0.0f;
 GLfloat asteroidScale = 0.0f;
 GLfloat asteroidDisplacement = 0.0f;
 GLfloat asteroidRotation = 0.0f;
-GLfloat asteroidSpeed = .01f;
+GLfloat asteroidSpeed = .001f;
 GLfloat asteroidXRotation = 0.0f;
 GLfloat asteroidYRotation = 0.0f;
 GLfloat asteroidZRotation = 0.0f;
@@ -68,8 +68,8 @@ GLfloat cameraAngle = 0.0f;
 GLfloat spaceShipAngle = 0.0f;
 GLfloat asteroidAngle = 0.0f;
 
-GLfloat cameraRadius = torusScale * 1.0f;
 GLfloat shipRadius = torusScale * 1.0f;
+GLfloat cameraRadius = shipRadius;
 GLfloat asteroidRadius = torusScale * 1.0f;
 
 GLfloat spaceTime = 0.0f;
@@ -480,10 +480,13 @@ int main()
 
 		// handle death condition
 		if (lives == 0)
-			glfwTerminate(); 
+			break;
 
 	} // running loop
 
+	// Print score
+	cout << "Score: " << (int)spaceTime/10 << endl;
+	
 	glfwTerminate();
 	return 0;
 }
