@@ -91,6 +91,8 @@ Model spaceShip;
 
 vector <Model> asteroids;
 
+GLint lives = 3;
+
 static void init_Resources()
 {
 	// Init GLFW
@@ -140,6 +142,7 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 		cameraX += movementSpeed * 10 * forwardDirection.x;
 		cameraZ += movementSpeed * 10 * forwardDirection.z;
 
+		lives--;
 		collision = false;
 	}
 
@@ -469,11 +472,16 @@ int main()
 				break;
 			}
 		}
-		// Swap the buffers
+
 		glfwSwapBuffers(window);
 
 		// Increment the time variable
 		spaceTime += 0.1f;
+
+		// handle death condition
+		if (lives == 0)
+			glfwTerminate(); 
+
 	} // running loop
 
 	glfwTerminate();
