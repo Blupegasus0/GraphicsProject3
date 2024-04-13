@@ -132,6 +132,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="SmokeFragment.glsl" />
+    <None Include="SmokeVertex.glsl" />
     <None Include="SpaceFragment.glsl" />
     <None Include="SpaceVertex.glsl" />
     <None Include="SpaceShipFragment.glsl" />

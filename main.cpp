@@ -22,6 +22,7 @@
 #endif
 
 #define numAstroids 50
+#define numSlug 15
 const GLfloat shipYLimit = 20;
 
 // Active window
@@ -91,6 +92,9 @@ vector<vector <glm::vec3>> asteroidsData(numAstroids);
 Model spaceShip;
 
 vector <Model> asteroids;
+
+vector <Model> smokeParticles(numSlug);
+vector <glm::vec4> smokeParticlesData(numSlug);
 
 GLint lives = 3;
 
@@ -345,6 +349,8 @@ int main()
 
 	Shader spaceShader("SpaceVertex.glsl", "SpaceFragment.glsl");
 
+	Shader smokeShader("SmokeVertex.glsl", "SmokeFragment.glsl");
+
 	Model torus((GLchar*)"assets/objects/torus.obj");
 
 	//torusOuterRing = torusScale * torus.radius * 2;
@@ -368,16 +374,12 @@ int main()
 	srand(glfwGetTime());
 
 	for (int i = 0; i < numAstroids; i++) {
-		asteroidModels[i] = glm::mat4(1.0f);
 		asteroidRadius = (rand() % (int)torusScale * .85) + torusScale * .55f;
-		asteroidRadius = torusScale * 1.0f;
 		asteroidAngle = (rand() % 360);
-		asteroidYOffset = (rand() % 30) - 15;
-		GLfloat x = asteroidRadius * sin(glm::radians(asteroidAngle + 20));
-		GLfloat y = 0.0f + asteroidYOffset;
-		GLfloat z = asteroidRadius * cos(glm::radians(asteroidAngle + 20));
-		asteroidModels[i] = glm::translate(asteroidModels[i], glm::vec3(x, y, z));
-		asteroids[i].center = glm::vec3(x, y, z);
+		asteroidYOffset = (torusScale / 4) * glm::sin(rand() % 360);
+		glm::vec3(.4, .6, .8);
+		asteroidsData[i].push_back(glm::vec3(asteroidRadius, asteroidAngle, asteroidYOffset));
+		asteroidsData[i].push_back(glm::vec3(rand() % 1000, rand() % 1000, rand() % 1000));
 	}
 
 	shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5));
@@ -389,6 +391,7 @@ int main()
 	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
 
 	GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
+	GLuint asteroidTexture = loadBMP("assets/textures/asteroid.bmp");
 	GLuint spaceTexture = loadBMP("assets/images/env_stars.bmp");
 
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 1000000.0f);
@@ -401,6 +404,9 @@ int main()
 
 	spaceShader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(spaceShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+	smokeShader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(smokeShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 	// Iterate this block while the window is open
 	while (!glfwWindowShouldClose(window))
@@ -421,11 +427,35 @@ int main()
 		asteroidShader.Use();
 		glUniformMatrix4fv(glGetUniformLocation(asteroidShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 
+		GLuint TextureID = glGetUniformLocation(asteroidShader.Program, "asteroidTexture");
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, asteroidTexture);
+
 		for (int i = 0; i < numAstroids; i++) {
-			asteroidModels[i] = glm::rotate(asteroidModels[i], asteroidSpeed, glm::vec3(0.2f, 0.8f, 0.6f));
+			asteroidModels[i] = glm::mat4(1.0f);
+			GLdouble asteroidXRotation = rand() % 1000;
+			GLdouble asteroidYRotation = rand() % 1000;
+			GLdouble asteroidZRotation = rand() % 1000;
+			asteroidRadius = asteroidsData[i][0].x;
+			asteroidAngle = asteroidsData[i][0].y;
+			asteroidYOffset = asteroidsData[i][0].z;
+			GLfloat x = asteroidRadius * sin(glm::radians(asteroidAngle + 20));
+			GLfloat z = asteroidRadius * cos(glm::radians(asteroidAngle + 20));
+
+			asteroidModels[i] = glm::translate(asteroidModels[i], glm::vec3(-x, asteroidYOffset, z));
+			asteroids[i].center = glm::vec3(-x, asteroidYOffset, z);
+
+			asteroidAngle += 0.1f;
+			if (asteroidAngle > 360.0f) {
+				asteroidAngle = 0.0f;
+			}
+			asteroidsData[i][0].y = asteroidAngle;
+			asteroidModels[i] = glm::rotate(asteroidModels[i], spaceTime / 10, glm::normalize(glm::vec3(asteroidsData[i][1].x, asteroidsData[i][1].y, asteroidsData[i][1].z)));
 			glUniformMatrix4fv(glGetUniformLocation(asteroidShader.Program, "model"), 1,
 				GL_FALSE, glm::value_ptr(asteroidModels[i]));
 			asteroids[i].Draw(asteroidShader);
+			asteroidSpeed += 0.0001f;
 		}
 
 		for (int i = 0; i < numAstroids; i++) {
@@ -435,6 +465,32 @@ int main()
 				collision = true;
 				break;
 			}
+		}
+
+		if (smokeParticles.size() < numSlug) {
+			smokeParticles.push_back(Model((GLchar*)"assets/objects/smoke.obj"));
+			smokeParticlesData.push_back(glm::vec4(shipX - 2 + 2.2 * sin(glm::radians(spaceShipAngleInPlane - 120.0f)), shipY, shipZ - 1 + 2.2 * cos(glm::radians(spaceShipAngleInPlane - 120.0f)), 0.0));
+		}
+		else {
+			smokeParticles.erase(smokeParticles.begin());
+			smokeParticles.push_back(Model((GLchar*)"assets/objects/smoke.obj"));
+			smokeParticlesData.erase(smokeParticlesData.begin());
+			smokeParticlesData.push_back(glm::vec4(shipX + 2.2 * sin(glm::radians(spaceShipAngleInPlane - 120.0f)), shipY, shipZ + 2.2 * cos(glm::radians(spaceShipAngleInPlane - 120.0f)), 0.0));
+		}
+
+		smokeShader.Use();
+		glUniformMatrix4fv(glGetUniformLocation(smokeShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+		for (int i = 0; i < numSlug; i++) {
+			glm::mat4 smokeModel = glm::mat4(1.0f);
+			smokeModel = glm::translate(smokeModel, glm::vec3(smokeParticlesData[i].x, smokeParticlesData[i].y, smokeParticlesData[i].z));
+			smokeModel = glm::scale(smokeModel, glm::vec3(.09f));
+			glUniformMatrix4fv(glGetUniformLocation(smokeShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(smokeModel));
+			smokeParticles[i].Draw(smokeShader);
+		}
+
+		for (int i = 0; i < smokeParticlesData.size(); i++) {
+			smokeParticlesData[i].w += 0.1f;
+			smokeParticlesData[i].y += smokeParticlesData[i].w;
 		}
 
 		glfwSwapBuffers(window);
