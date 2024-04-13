@@ -71,11 +71,11 @@ GLfloat spaceShipAngle = 0.0f;
 GLfloat asteroidAngle = 0.0f;
 
 GLfloat shipRadius = torusScale * 1.0f;
-GLfloat cameraRadius = shipRadius;
+GLfloat cameraRadius = shipRadius + 10;
 GLfloat asteroidRadius = torusScale * 1.0f;
 
 GLfloat spaceTime = 0.0f;
-GLfloat spaceShipAngleInPlane = 10.0f;
+GLfloat spaceShipAngleInPlane = 30.0f;
 GLfloat cameraAngleInPlane = 1.0f;
 glm::vec3 forwardDirection = glm::vec3(1.0f, 0.0f, 1.0f);
 
@@ -263,8 +263,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	// Vertical movement
 	if (key == GLFW_KEY_W)
 	{
-		//not working
-		// move ship up
 		nextShipX = shipX;
 		nextShipY = shipY + 0.5f;
 		nextShipZ = shipZ;
@@ -274,11 +272,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 			cameraY += 0.5f;
 		}
 	}
-
 	if (key == GLFW_KEY_S)
 	{
-		//not working
-		// move ship down
 		nextShipX = shipX;
 		nextShipY = shipY - 0.5f;
 		nextShipZ = shipZ;
@@ -292,10 +287,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	// Lateral movement
 	if (key == GLFW_KEY_A)
 		shipRadius -= 0.2;
-	//spaceShipAngleInPlane += 1.0f;
+		//spaceShipAngleInPlane += 1.0f;
 	if (key == GLFW_KEY_D)
 		shipRadius += 0.2;
-	//spaceShipAngleInPlane -= 1.0f;
+		//spaceShipAngleInPlane -= 1.0f;
+
 
 	if (key == GLFW_KEY_Q)
 	{
@@ -307,7 +303,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		cameraZ = rotationVector.y;
 
 	}
-
 	if (key == GLFW_KEY_E)
 	{
 		// Rotate the camera around the ship.center
