@@ -40,6 +40,12 @@
     <None Include="SpaceFragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="SmokeVertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="SmokeFragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
