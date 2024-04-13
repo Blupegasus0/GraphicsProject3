@@ -453,8 +453,8 @@ int main()
 			asteroidSpeed += 0.0001f;
 		}
 
+		// Check for collision
 		for (int i = 0; i < numAstroids; i++) {
-			// Check for collision
 			if (glm::distance(spaceShip.center, asteroids[i].center) <= spaceShip.radius + asteroids[i].radius) {
 				std::cout << "Collision detected" << std::endl;
 				collision = true;
@@ -490,7 +490,6 @@ int main()
 
 		glfwSwapBuffers(window);
 
-		// Increment the time variable
 		spaceTime += 0.1f;
 
 		// handle death condition
@@ -499,7 +498,6 @@ int main()
 
 	} // running loop
 
-	// Print score
 	int score = (int)spaceTime;
 	cout << "Score: " << score << endl;
 	
