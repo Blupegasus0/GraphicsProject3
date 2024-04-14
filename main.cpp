@@ -21,9 +21,9 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define numAstroids 50
+#define numAstroids 150
 #define numSlug 15
-const GLfloat shipYLimit = 20;
+const GLfloat shipYLimit = 25;
 
 // Active window
 GLFWwindow* window;
@@ -32,6 +32,7 @@ GLFWwindow* window;
 GLuint sWidth = 1300, sHeight = 720;
 
 GLfloat torusScale = 130.0f;
+//GLfloat torusScale = 1230.0f; // scale for torus2
 
 // Camera
 					  //x-comp,y-comp,z-comp
@@ -161,31 +162,25 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 
 	glm::mat4 spaceShipModel = glm::mat4(1.f);
 
-	// Translate ship long ship radius
 	if (spaceShipAngle != 360) {
 		spaceShipAngle += 0.01;
 		cameraAngle += 0.01;
 		camera.Yaw -= 0.01;
 	}
 	else {
-		spaceShipAngle += 0.0;
-		cameraAngle += 0.0;
-		camera.Yaw -= 0.0;
+		spaceShipAngle = 0.0;
+		cameraAngle = 0.0;
+		camera.Yaw = 0.0;
 	}
 
 	shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5));
-	//shipY = 0.0f;
 	shipZ = shipRadius * cos(glm::radians(spaceShipAngle + 5));
 
 	cameraX = cameraRadius * sin(glm::radians(cameraAngle));
-	//cameraY = 5.0f;
 	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
-	//
 
 	spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
 	model.center = glm::vec3(shipX, shipY, shipZ);
-
-	//std::cout << "X: " << shipX << " Y: " << shipY << " Z: " << shipZ << endl;
 
 	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 5.0f + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngleInPlane), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -293,7 +288,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		//spaceShipAngleInPlane -= 1.0f;
 
 
-	if (key == GLFW_KEY_Q)
+	if (key == GLFW_KEY_E)
 	{
 		// Rotate the camera around the ship.center
 		camera.ProcessMouseMovement(4.0f, 0.0f);
@@ -303,7 +298,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		cameraZ = rotationVector.y;
 
 	}
-	if (key == GLFW_KEY_E)
+	if (key == GLFW_KEY_Q)
 	{
 		// Rotate the camera around the ship.center
 		camera.ProcessMouseMovement(-4.0f, 0.0f);
@@ -389,7 +384,7 @@ int main()
 	GLuint asteroidTexture = loadBMP("assets/textures/asteroid.bmp");
 	GLuint spaceTexture = loadBMP("assets/images/env_stars.bmp");
 
-	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 1000000.0f);
+	glm::mat4 projection = glm::perspective(glm::radians(35.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 1000000.0f);
 
 	spaceShipShader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(spaceShipShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
