@@ -71,8 +71,8 @@ GLfloat cameraAngle = 0.0f;
 GLfloat spaceShipAngle = 0.0f;
 GLfloat asteroidAngle = 0.0f;
 
-GLfloat shipRadius = torusScale * 1.0f;
-GLfloat cameraRadius = shipRadius + 10;
+GLfloat shipRadius = torusScale + 10 * 1.0f;
+GLfloat cameraRadius = shipRadius+ 5;
 GLfloat asteroidRadius = torusScale * 1.0f;
 
 GLfloat spaceTime = 0.0f;
@@ -182,7 +182,7 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 	spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
 	model.center = glm::vec3(shipX, shipY, shipZ);
 
-	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 5.0f + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + -5.0f + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngleInPlane), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceShipModel));
@@ -349,6 +349,7 @@ int main()
 
 	torusOuterRingRadius = ((((torus.radius) * torusScale * .75) - torusScale) * .75) + torusScale;
 	torusInnerRadius = torusOuterRingRadius - torusOuterRadius;
+	camera.Yaw = -25;
 
 	//torusOuterBound();
 
