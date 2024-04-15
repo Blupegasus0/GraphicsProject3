@@ -149,7 +149,6 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 		GLfloat movementSpeed = 0.5f; // Adjust as needed
 		shipX += movementSpeed * 10 * forwardDirection.x;
 		shipZ += movementSpeed * 10 * forwardDirection.z;
-		// ==========
 
 		// Update the camera to follow the ship
 		cameraX += movementSpeed * 10 * forwardDirection.x;
@@ -208,7 +207,6 @@ static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint te
 	spaceModel = glm::scale(spaceModel, glm::vec3(torusScale));
 
 	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceModel));
-	//std::cout << "Torus Radius: " << model.radius << endl;
 	model.Draw(shader);
 }
 
@@ -219,8 +217,6 @@ static void update_Camera() {
 static GLfloat getAngle() {
 	glm::vec3 shipPosition = glm::vec3(nextShipX, 0.0f, nextShipZ);
 	GLfloat shipMagnitude = sqrt((nextShipX * nextShipX) + (nextShipZ * nextShipZ));
-	//cout << "Ship Magnitude: " << shipMagnitude << endl;
-	//cout << "Cosine of Angle: " << (nextShipX / shipMagnitude) << endl;
 	return (acos(nextShipX / shipMagnitude) * 180 * 7) / 22;
 
 
@@ -228,14 +224,7 @@ static GLfloat getAngle() {
 
 static GLboolean outOfBounds(GLfloat angle) {
 	GLfloat x, z, magnitude;
-	/*cout << "Angle: " << angle << endl;
-	cout << "X: " << shipX << endl;
-	cout << "Y: " << shipY << endl;
-	cout << "Z: " << shipZ << endl;
-	cout << "Next X: " << nextShipX << endl;
-	cout << "Next Y: " << nextShipY << endl;
-	cout << "Next Z: " << nextShipZ << endl;*/
-	if (nextShipZ >= 0) {
+		if (nextShipZ >= 0) {
 		x = torusScale * cos(angle * M_PI / 180);
 		z = torusScale * sin(angle * M_PI / 180);
 		magnitude = sqrt(pow((x - nextShipX), 2) + pow((nextShipY), 2) + pow((z - nextShipZ), 2));
@@ -267,7 +256,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		nextShipX = shipX;
 		nextShipY = shipY + 0.5f;
 		nextShipZ = shipZ;
-		//if (!outOfBounds(getAngle())) {
+
 		if (shipY < shipYLimit) {
 			shipY += 0.5f;
 			cameraY += 0.5f;
@@ -278,7 +267,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		nextShipX = shipX;
 		nextShipY = shipY - 0.5f;
 		nextShipZ = shipZ;
-		//if (!outOfBounds(getAngle())) {
+
 		if (shipY > -shipYLimit) {
 			shipY -= 0.5f;
 			cameraY -= 0.5f;
@@ -289,11 +278,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	if (key == GLFW_KEY_A)
 		if (shipRadius - 0.2 > shipRadiusMin) 
 			shipRadius -= 0.2;
-		//spaceShipAngleInPlane += 1.0f;
 	if (key == GLFW_KEY_D)
 		if (shipRadius + 0.2 < shipRadiusMax) 
 			shipRadius += 0.2;
-		//spaceShipAngleInPlane -= 1.0f;
 
 
 	if (key == GLFW_KEY_E)
@@ -350,10 +337,6 @@ int main()
 	Shader smokeShader("SmokeVertex.glsl", "SmokeFragment.glsl");
 
 	Model torus((GLchar*)"assets/objects/torus.obj");
-
-	//torusOuterRing = torusScale * torus.radius * 2;
-	//torusInnerRing = (4 * torusOuterRadius) - torusOuterRing;
-	//torusInnerRadius = (torusOuterRing - torusInnerRing) / M_PI;
 
 	torusOuterRingRadius = ((((torus.radius) * torusScale * .75) - torusScale) * .75) + torusScale;
 	torusInnerRadius = torusOuterRingRadius - torusOuterRadius;
