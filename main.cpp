@@ -24,6 +24,8 @@
 #define numAstroids 150
 #define numSlug 15
 const GLfloat shipYLimit = 25;
+const GLfloat shipRadiusMin = 130;
+const GLfloat shipRadiusMax = 145;
 
 // Active window
 GLFWwindow* window;
@@ -129,15 +131,20 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 {
 	srand(glfwGetTime());
 
+	glm::mat4 spaceShipModel = glm::mat4(1.f);
+
 	glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
 
 	if (collision) {
 
 		// temporary until collision animation is implemented
-		if (rand() % 2 == 1)
-			shipRadius -= 10;
-		else
-			shipRadius += 10;
+		if (shipY < (shipYLimit + 10)) {
+			shipY += 10;
+			cameraY += 10;
+		} else {
+			shipY -= 10;
+			cameraY -= 10;
+		}
 
 		GLfloat movementSpeed = 0.5f; // Adjust as needed
 		shipX += movementSpeed * 10 * forwardDirection.x;
@@ -149,6 +156,7 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 		cameraZ += movementSpeed * 10 * forwardDirection.z;
 
 		lives--;
+		cout << "lives: " << lives << endl;
 		collision = false;
 	}
 
@@ -159,8 +167,6 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 
 	shader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
-
-	glm::mat4 spaceShipModel = glm::mat4(1.f);
 
 	if (spaceShipAngle != 360) {
 		spaceShipAngle += 0.01;
@@ -281,10 +287,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 	// Lateral movement
 	if (key == GLFW_KEY_A)
-		shipRadius -= 0.2;
+		if (shipRadius - 0.2 > shipRadiusMin) 
+			shipRadius -= 0.2;
 		//spaceShipAngleInPlane += 1.0f;
 	if (key == GLFW_KEY_D)
-		shipRadius += 0.2;
+		if (shipRadius + 0.2 < shipRadiusMax) 
+			shipRadius += 0.2;
 		//spaceShipAngleInPlane -= 1.0f;
 
 
