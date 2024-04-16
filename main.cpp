@@ -44,6 +44,8 @@ GLfloat cameraX = 0.0f;
 GLfloat cameraY = 0.0f;
 GLfloat cameraZ = 0.0f;
 
+GLfloat cameraOffSet = 0.0f;
+
 GLfloat asteroidX = 0.0f;
 GLfloat asteroidY = 0.0f;
 GLfloat asteroidZ = 0.0f;
@@ -214,7 +216,7 @@ static void update_Camera() {
 	cameraX = cameraRadius * sin(glm::radians(cameraAngle));
 	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
 
-	camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), -cameraAngle, camera.Pitch);
+	camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), -cameraAngle + cameraOffSet, camera.Pitch);
 }
 
 static GLfloat getAngle() {
@@ -286,22 +288,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 	if (key == GLFW_KEY_E)
 	{
-		// Rotate the camera around the ship.center
-		camera.ProcessMouseMovement(4.0f, 0.0f);
-		glm::mat2 rotationMatrix = glm::mat2(cos(glm::radians(cameraAngleInPlane)), sin(glm::radians(cameraAngleInPlane)), -sin(glm::radians(cameraAngleInPlane)), cos(glm::radians(cameraAngleInPlane)));
-		glm::vec2 rotationVector = rotationMatrix * glm::vec2(cameraX - spaceShip.center.x, cameraZ - spaceShip.center.z) + glm::vec2(spaceShip.center.x, spaceShip.center.z);
-		cameraX = rotationVector.x;
-		cameraZ = rotationVector.y;
+		cameraOffSet += 0.5f;
 
 	}
 	if (key == GLFW_KEY_Q)
 	{
-		// Rotate the camera around the ship.center
-		camera.ProcessMouseMovement(-4.0f, 0.0f);
-		glm::mat2 rotationMatrix = glm::mat2(cos(glm::radians(cameraAngleInPlane)), -sin(glm::radians(cameraAngleInPlane)), sin(glm::radians(cameraAngleInPlane)), cos(glm::radians(cameraAngleInPlane)));
-		glm::vec2 rotationVector = rotationMatrix * glm::vec2(cameraX - spaceShip.center.x, cameraZ - spaceShip.center.z) + glm::vec2(spaceShip.center.x, spaceShip.center.z);
-		cameraX = rotationVector.x;
-		cameraZ = rotationVector.y;
+		cameraOffSet -= 0.5f;
 	}
 
 
@@ -472,13 +464,8 @@ int main()
 			smokeModel = glm::translate(smokeModel, glm::vec3(smokeParticlesData[i].x, smokeParticlesData[i].y, smokeParticlesData[i].z));
 			smokeModel = glm::scale(smokeModel, glm::vec3(.09f));
 			glUniformMatrix4fv(glGetUniformLocation(smokeShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(smokeModel));
-			smokeParticles[i].Draw(smokeShader);
+			//smokeParticles[i].Draw(smokeShader);
 		}
-
-		//for (int i = 0; i < smokeParticlesData.size(); i++) {
-		//	smokeParticlesData[i].w += 0.1f;
-		//	smokeParticlesData[i].y += smokeParticlesData[i].w;
-		//}
 
 		glfwSwapBuffers(window);
 
