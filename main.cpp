@@ -38,7 +38,7 @@ GLfloat torusScale = 130.0f;
 
 // Camera
 					  //x-comp,y-comp,z-comp
-Camera camera(glm::vec3(torusScale * 1.0f, 5.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), 0.0f, -15);
+Camera camera(glm::vec3(torusScale * 1.0f, 5.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), 0.0f, -20);
 
 GLfloat cameraX = 0.0f;
 GLfloat cameraY = 0.0f;
@@ -74,7 +74,7 @@ GLfloat spaceShipAngle = 0.0f;
 GLfloat asteroidAngle = 0.0f;
 
 GLfloat shipRadius = torusScale + 10 * 1.0f;
-GLfloat cameraRadius = shipRadius+ 5;
+GLfloat cameraRadius = shipRadius - 2;
 GLfloat asteroidRadius = torusScale * 1.0f;
 
 GLfloat spaceTime = 0.0f;
@@ -127,6 +127,22 @@ static void init_Resources()
 	glEnable(GL_DEPTH_TEST);
 }
 
+static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint texture) {
+	GLuint TextureID = glGetUniformLocation(shader.Program, "spaceTexture");
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	shader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+
+	glm::mat4 spaceModel = glm::mat4(1.0f);
+	spaceModel = glm::scale(spaceModel, glm::vec3(torusScale));
+
+	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceModel));
+
+	model.Draw(shader);
+}
+
 static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuint texture)
 {
 	srand(glfwGetTime());
@@ -141,7 +157,8 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 		if (shipY < (shipYLimit + 10)) {
 			shipY += 10;
 			cameraY += 10;
-		} else {
+		}
+		else {
 			shipY -= 10;
 			cameraY -= 10;
 		}
@@ -179,62 +196,35 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 		camera.Yaw = 0.0;
 	}
 
-	shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5));
-	shipZ = shipRadius * cos(glm::radians(spaceShipAngle + 5));
-
-	cameraX = cameraRadius * sin(glm::radians(cameraAngle));
-	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
+	shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5 ));
+	shipZ = shipRadius * cos(glm::radians(spaceShipAngle + 5 ));
 
 	spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
 	model.center = glm::vec3(shipX, shipY, shipZ);
 
-	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + -5.0f + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngleInPlane), glm::vec3(0.0f, 1.0f, 0.0f));
+	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceShipModel));
 
 	model.Draw(shader);
 }
 
-static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint texture) {
-	GLuint TextureID = glGetUniformLocation(shader.Program, "spaceTexture");
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	shader.Use();
-	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
-
-	glm::mat4 spaceModel = glm::mat4(1.0f);
-	spaceModel = glm::scale(spaceModel, glm::vec3(torusScale));
-
-	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceModel));
-	//std::cout << "Torus Radius: " << model.radius << endl;
-	model.Draw(shader);
-}
-
 static void update_Camera() {
-	camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), camera.Yaw, camera.Pitch);
+	// Update the camera to follow the ship
+	cameraX = cameraRadius * sin(glm::radians(cameraAngle));
+	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
+
+	camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), -cameraAngle, camera.Pitch);
 }
 
 static GLfloat getAngle() {
 	glm::vec3 shipPosition = glm::vec3(nextShipX, 0.0f, nextShipZ);
 	GLfloat shipMagnitude = sqrt((nextShipX * nextShipX) + (nextShipZ * nextShipZ));
-	//cout << "Ship Magnitude: " << shipMagnitude << endl;
-	//cout << "Cosine of Angle: " << (nextShipX / shipMagnitude) << endl;
 	return (acos(nextShipX / shipMagnitude) * 180 * 7) / 22;
-
-
 }
 
 static GLboolean outOfBounds(GLfloat angle) {
 	GLfloat x, z, magnitude;
-	/*cout << "Angle: " << angle << endl;
-	cout << "X: " << shipX << endl;
-	cout << "Y: " << shipY << endl;
-	cout << "Z: " << shipZ << endl;
-	cout << "Next X: " << nextShipX << endl;
-	cout << "Next Y: " << nextShipY << endl;
-	cout << "Next Z: " << nextShipZ << endl;*/
 	if (nextShipZ >= 0) {
 		x = torusScale * cos(angle * M_PI / 180);
 		z = torusScale * sin(angle * M_PI / 180);
@@ -253,7 +243,6 @@ static GLboolean outOfBounds(GLfloat angle) {
 		else
 			return false;
 	}
-
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -356,7 +345,6 @@ int main()
 
 	torusOuterRingRadius = ((((torus.radius) * torusScale * .75) - torusScale) * .75) + torusScale;
 	torusInnerRadius = torusOuterRingRadius - torusOuterRadius;
-	camera.Yaw = -25;
 
 	//torusOuterBound();
 
@@ -467,17 +455,18 @@ int main()
 
 		if (smokeParticles.size() < numSlug) {
 			smokeParticles.push_back(Model((GLchar*)"assets/objects/smoke.obj"));
-			smokeParticlesData.push_back(glm::vec4(shipX - 2 + 2.2 * sin(glm::radians(spaceShipAngleInPlane - 120.0f)), shipY, shipZ - 1 + 2.2 * cos(glm::radians(spaceShipAngleInPlane - 120.0f)), 0.0));
+			smokeParticlesData.push_back(glm::vec4(shipX-1, shipY, shipZ, 0.0));
 		}
 		else {
 			smokeParticles.erase(smokeParticles.begin());
 			smokeParticles.push_back(Model((GLchar*)"assets/objects/smoke.obj"));
 			smokeParticlesData.erase(smokeParticlesData.begin());
-			smokeParticlesData.push_back(glm::vec4(shipX + 2.2 * sin(glm::radians(spaceShipAngleInPlane - 120.0f)), shipY, shipZ + 2.2 * cos(glm::radians(spaceShipAngleInPlane - 120.0f)), 0.0));
+			smokeParticlesData.push_back(glm::vec4(shipX-1, shipY, shipZ, 0.0));
 		}
 
 		smokeShader.Use();
 		glUniformMatrix4fv(glGetUniformLocation(smokeShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+		
 		for (int i = 0; i < numSlug; i++) {
 			glm::mat4 smokeModel = glm::mat4(1.0f);
 			smokeModel = glm::translate(smokeModel, glm::vec3(smokeParticlesData[i].x, smokeParticlesData[i].y, smokeParticlesData[i].z));
@@ -486,14 +475,17 @@ int main()
 			smokeParticles[i].Draw(smokeShader);
 		}
 
-		for (int i = 0; i < smokeParticlesData.size(); i++) {
-			smokeParticlesData[i].w += 0.1f;
-			smokeParticlesData[i].y += smokeParticlesData[i].w;
-		}
+		//for (int i = 0; i < smokeParticlesData.size(); i++) {
+		//	smokeParticlesData[i].w += 0.1f;
+		//	smokeParticlesData[i].y += smokeParticlesData[i].w;
+		//}
 
 		glfwSwapBuffers(window);
 
 		spaceTime += 0.1f;
+
+		spaceShipAngle += 0.1f;
+		cameraAngle += 0.1f;
 
 		// handle death condition
 		if (lives == 0)
