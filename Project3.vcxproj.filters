@@ -22,10 +22,10 @@
     <None Include="SpaceShipVertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="AsteroidsVertex.glsl">
+    <None Include="AsteroidVertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="AsteroidsFragment.glsl">
+    <None Include="AsteroidFragment.glsl">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="TorusFragment.glsl">
@@ -34,9 +34,21 @@
     <None Include="TorusVertex.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="SpaceVertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="SpaceFragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="SmokeVertex.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="SmokeFragment.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Project3.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
