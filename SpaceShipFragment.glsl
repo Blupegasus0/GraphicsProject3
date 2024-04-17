@@ -1,12 +1,12 @@
 #version 330 core
 
-in vec2 TextureCoords;
-out vec4 color;
+varying vec2 UV;
+varying vec3 Position;
 
 uniform sampler2D shipTexture;
 
 void main()
 {
-    //color = texture(shipTexture, TextureCoords);
-    color = vec4(1.0, 0.0, 0.0, 1.0);
+    gl_FragColor = texture2D(shipTexture, UV);
+    //color = vec4(0.0, 1.0, 0.0, 1.0);
 }
