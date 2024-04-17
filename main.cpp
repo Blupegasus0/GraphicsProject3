@@ -242,10 +242,6 @@ static void update_Camera() {
 static void minMax(Model& model) {
 	GLfloat magnitude = glm::distance(model.center, camera.Position);
 
-	glm::vec3 frontVector = camera.Front * magnitude;
-
-	GLfloat frontMagnitude = glm::distance(frontVector, glm::vec3(shipX, shipY, shipZ));
-
 	GLfloat screenLimit = magnitude * tan(glm::radians(22.5));
 
 	/*cout << "Magnitude: " << magnitude << endl;
@@ -329,13 +325,15 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	if (key == GLFW_KEY_E)
 	{
 		cameraOffSet += 0.5f;
-
 	}
 	if (key == GLFW_KEY_Q)
 	{
 		cameraOffSet -= 0.5f;
 	}
-
+	if (key == GLFW_KEY_C)
+	{
+		cameraOffSet = 0.0f;
+	}
 
 
 	if (key == GLFW_KEY_R)
