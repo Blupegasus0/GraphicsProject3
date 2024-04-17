@@ -1,4 +1,4 @@
-#version 330 core
+#version 120 core
 
 varying vec2 UV;
 varying vec3 Position;
