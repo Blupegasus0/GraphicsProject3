@@ -44,6 +44,8 @@ GLfloat cameraX = 0.0f;
 GLfloat cameraY = 0.0f;
 GLfloat cameraZ = 0.0f;
 
+GLfloat cameraOffSet = 0.0f;
+
 GLfloat asteroidX = 0.0f;
 GLfloat asteroidY = 0.0f;
 GLfloat asteroidZ = 0.0f;
@@ -77,7 +79,13 @@ GLfloat shipRadius = torusScale + 10 * 1.0f;
 GLfloat cameraRadius = shipRadius+ 5;
 GLfloat asteroidRadius = torusScale * 1.0f;
 
+GLfloat nextShipRadius;
+GLfloat maxShipRadius;
+GLfloat minShipRadius;
+
 GLfloat spaceTime = 0.0f;
+GLfloat collisionTime = -99999.0f;
+GLboolean immunity = false;
 GLfloat spaceShipAngleInPlane = 30.0f;
 GLfloat cameraAngleInPlane = 1.0f;
 glm::vec3 forwardDirection = glm::vec3(1.0f, 0.0f, 1.0f);
@@ -127,7 +135,7 @@ static void init_Resources()
 	glEnable(GL_DEPTH_TEST);
 }
 
-static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuint texture)
+static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuint texture[])
 {
 	srand(glfwGetTime());
 
@@ -135,8 +143,9 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 
 	glm::vec3 forwardDirection = glm::normalize(glm::vec3(-sin(glm::radians(spaceShipAngleInPlane - 90.0f)), 0.0f, cos(glm::radians(spaceShipAngleInPlane + 90.0f))));
 
-	if (collision) {
-
+	if ((collision) && (!immunity)) {
+		collisionTime = spaceTime;
+		/*
 		// temporary until collision animation is implemented
 		if (shipY < (shipYLimit + 10)) {
 			shipY += 10;
@@ -154,24 +163,39 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 		// Update the camera to follow the ship
 		cameraX += movementSpeed * 10 * forwardDirection.x;
 		cameraZ += movementSpeed * 10 * forwardDirection.z;
-
+		*/
 		lives--;
 		cout << "lives: " << lives << endl;
 		collision = false;
 	}
 
-	GLuint TextureID = glGetUniformLocation(shader.Program, "shipTexture");
+	cout << "Space Time: " << spaceTime << endl;
+	cout << "Collision Time: " << collisionTime << endl;
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
+
+	GLuint TextureID[2] = {};
+	TextureID[0] = glGetUniformLocation(shader.Program, "shipTexture");
+	TextureID[1] = glGetUniformLocation(shader.Program, "immunityTexture");
+
+	if (((spaceTime - collisionTime) <= 50.0f) && (lives > 0)) {
+		immunity = true;
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture[1]);
+	}
+	else
+	{
+		immunity = false;
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture[0]);
+	}
 
 	shader.Use();
 	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
 
 	if (spaceShipAngle != 360) {
-		spaceShipAngle += 0.01;
-		cameraAngle += 0.01;
-		camera.Yaw -= 0.01;
+		spaceShipAngle += 0.1;
+		cameraAngle += 0.1;
+		camera.Yaw -= 0.1;
 	}
 	else {
 		spaceShipAngle = 0.0;
@@ -217,41 +241,50 @@ static void update_Camera() {
 }
 
 static GLfloat getAngle() {
-	glm::vec3 shipPosition = glm::vec3(nextShipX, 0.0f, nextShipZ);
 	GLfloat shipMagnitude = sqrt((nextShipX * nextShipX) + (nextShipZ * nextShipZ));
-	//cout << "Ship Magnitude: " << shipMagnitude << endl;
-	//cout << "Cosine of Angle: " << (nextShipX / shipMagnitude) << endl;
-	return (acos(nextShipX / shipMagnitude) * 180 * 7) / 22;
 
-
+	return glm::degrees(acos(nextShipX / shipMagnitude));
 }
 
-static GLboolean outOfBounds(GLfloat angle) {
-	GLfloat x, z, magnitude;
-	/*cout << "Angle: " << angle << endl;
-	cout << "X: " << shipX << endl;
-	cout << "Y: " << shipY << endl;
-	cout << "Z: " << shipZ << endl;
-	cout << "Next X: " << nextShipX << endl;
-	cout << "Next Y: " << nextShipY << endl;
-	cout << "Next Z: " << nextShipZ << endl;*/
-	if (nextShipZ >= 0) {
-		x = torusScale * cos(angle * M_PI / 180);
-		z = torusScale * sin(angle * M_PI / 180);
-		magnitude = sqrt(pow((x - nextShipX), 2) + pow((nextShipY), 2) + pow((z - nextShipZ), 2));
-		if (magnitude >= torusInnerRadius)
+static void minMax(Model& model) {
+	GLfloat magnitude = glm::distance(model.center, camera.Position);
+
+	glm::vec3 frontVector = camera.Front * magnitude;
+
+	GLfloat frontMagnitude = glm::distance(frontVector, glm::vec3(shipX, shipY, shipZ));
+
+	GLfloat screenLimit = magnitude * tan(glm::radians(22.5));
+
+	/*cout << "Magnitude: " << magnitude << endl;
+	cout << "frontVectorX: " << frontVector.x << " frontVectorY: " << frontVector.y << " frontVectorZ: " << frontVector.z << endl;
+	cout << "Front Magnitude: " << frontMagnitude << endl;
+	cout << "Screen Limit: " << screenLimit << endl;*/
+
+	maxShipRadius = floor(shipRadius + screenLimit - model.radius);
+	minShipRadius = floor(shipRadius - screenLimit - (model.radius*2));
+
+	//cout << "Max Ship Radius: " << maxShipRadius << endl;
+	//cout << "Min Ship Radius: " << minShipRadius << endl;
+	cout << endl;
+}
+
+static GLboolean outScreenBounds(int direction) {
+	switch (direction) {
+	case (1): {
+		if (shipRadius <= minShipRadius)
 			return true;
 		else
 			return false;
 	}
-	if (nextShipZ < 0) {
-		x = torusScale * cos(-angle * M_PI / 180);
-		z = torusScale * sin(-angle * M_PI / 180);
-		magnitude = sqrt(pow((x - nextShipX), 2) + pow((nextShipY), 2) + pow((z - nextShipZ), 2));
-		if (magnitude >= torusInnerRadius)
+	case (2): {
+		if (shipRadius >= maxShipRadius)
 			return true;
 		else
 			return false;
+	}
+	default: {
+		cout << "Not an appropriate direction";
+	}
 	}
 
 }
@@ -285,14 +318,19 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 	}
 
 	// Lateral movement
-	if (key == GLFW_KEY_A)
-		if (shipRadius - 0.2 > shipRadiusMin) 
+	if (key == GLFW_KEY_A) {
+		nextShipRadius = shipRadius - 0.2;
+		if (!outScreenBounds(1)) {
 			shipRadius -= 0.2;
-		//spaceShipAngleInPlane += 1.0f;
-	if (key == GLFW_KEY_D)
-		if (shipRadius + 0.2 < shipRadiusMax) 
+		}
+	}
+
+	if (key == GLFW_KEY_D) {
+		nextShipRadius = shipRadius + 0.2;
+		if (!outScreenBounds(2)) {
 			shipRadius += 0.2;
-		//spaceShipAngleInPlane -= 1.0f;
+		}
+	}
 
 
 	if (key == GLFW_KEY_E)
@@ -350,15 +388,9 @@ int main()
 
 	Model torus((GLchar*)"assets/objects/torus.obj");
 
-	//torusOuterRing = torusScale * torus.radius * 2;
-	//torusInnerRing = (4 * torusOuterRadius) - torusOuterRing;
-	//torusInnerRadius = (torusOuterRing - torusInnerRing) / M_PI;
-
 	torusOuterRingRadius = ((((torus.radius) * torusScale * .75) - torusScale) * .75) + torusScale;
 	torusInnerRadius = torusOuterRingRadius - torusOuterRadius;
 	camera.Yaw = -25;
-
-	//torusOuterBound();
 
 	spaceShip = Model((GLchar*)"assets/objects/ship.obj");
 
@@ -389,8 +421,11 @@ int main()
 	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
 
 	GLuint shipTexture = loadBMP("assets/textures/ship.bmp");
+	GLuint immunityTexture = loadBMP("assets/textures/immunity-shield.bmp");
 	GLuint asteroidTexture = loadBMP("assets/textures/asteroid.bmp");
 	GLuint spaceTexture = loadBMP("assets/images/env_stars.bmp");
+
+	GLuint spaceShipTextures[] = { shipTexture, immunityTexture };
 
 	glm::mat4 projection = glm::perspective(glm::radians(35.0f), (GLfloat)sWidth / (GLfloat)sHeight, 0.1f, 1000000.0f);
 
@@ -417,7 +452,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		render_Space(spaceShader, torus, camera, spaceTexture);
-		render_SpaceShip(spaceShipShader, spaceShip, camera, shipTexture);
+		render_SpaceShip(spaceShipShader, spaceShip, camera, spaceShipTextures);
 
 		update_Camera();
 
@@ -456,12 +491,14 @@ int main()
 			asteroidSpeed += 0.0001f;
 		}
 
-		// Check for collision
-		for (int i = 0; i < numAstroids; i++) {
-			if (glm::distance(spaceShip.center, asteroids[i].center) <= spaceShip.radius + asteroids[i].radius) {
-				std::cout << "Collision detected" << std::endl;
-				collision = true;
-				break;
+		if (!immunity) {
+			// Check for collision
+			for (int i = 0; i < numAstroids; i++) {
+				if (glm::distance(spaceShip.center, asteroids[i].center) <= spaceShip.radius + asteroids[i].radius) {
+					std::cout << "Collision detected" << std::endl;
+					collision = true;
+					break;
+				}
 			}
 		}
 
@@ -490,6 +527,9 @@ int main()
 			smokeParticlesData[i].w += 0.1f;
 			smokeParticlesData[i].y += smokeParticlesData[i].w;
 		}
+
+		if (spaceTime < 0.2f)
+			minMax(spaceShip);
 
 		glfwSwapBuffers(window);
 
