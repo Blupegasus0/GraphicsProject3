@@ -328,12 +328,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 	if (key == GLFW_KEY_E)
 	{
-		camera.Yaw += 0.5f;
+		if(!outScreenBounds)
+			camera.Yaw += 0.5f;
 
 	}
 	if (key == GLFW_KEY_Q)
 	{
-		camera.Yaw -= 0.5f;
+		if(!outScreenBounds)
+			camera.Yaw -= 0.5f;
 	}
 
 
