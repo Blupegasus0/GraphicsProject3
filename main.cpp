@@ -503,7 +503,7 @@ int main()
 			smokeModel = glm::translate(smokeModel, glm::vec3(smokeParticlesData[i].x, smokeParticlesData[i].y, smokeParticlesData[i].z));
 			smokeModel = glm::scale(smokeModel, glm::vec3(.09f));
 			glUniformMatrix4fv(glGetUniformLocation(smokeShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(smokeModel));
-			smokeParticles[i].Draw(smokeShader);
+			//smokeParticles[i].Draw(smokeShader);
 		}
 
 		for (int i = 0; i < smokeParticlesData.size(); i++) {
