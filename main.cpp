@@ -94,10 +94,6 @@ GLfloat torusOuterRadius = torusScale;
 GLfloat torusInnerRadius = 0.5;
 GLfloat torusOuterRingRadius;
 GLfloat torusInnerRingRadius;
-vector<vector <GLfloat>> torusOuterRingX;
-vector<vector <GLfloat>> torusOuterRingZ;
-vector<vector <GLfloat>> torusInnerRingX;
-vector<vector <GLfloat>> torusInnerRingZ;
 
 vector<vector <glm::vec3>> asteroidsData(numAstroids);
 Model spaceShip;
@@ -133,6 +129,22 @@ static void init_Resources()
 
 	// Setup OpenGL options
 	glEnable(GL_DEPTH_TEST);
+}
+
+static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint texture) {
+	GLuint TextureID = glGetUniformLocation(shader.Program, "spaceTexture");
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	shader.Use();
+	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+
+	glm::mat4 spaceModel = glm::mat4(1.0f);
+	spaceModel = glm::scale(spaceModel, glm::vec3(torusScale));
+
+	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceModel));
+
+	model.Draw(shader);
 }
 
 static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuint texture[])
@@ -219,30 +231,12 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 	model.Draw(shader);
 }
 
-static void render_Space(Shader& shader, Model& model, Camera& camera, GLuint texture) {
-	GLuint TextureID = glGetUniformLocation(shader.Program, "spaceTexture");
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	shader.Use();
-	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
-
-	glm::mat4 spaceModel = glm::mat4(1.0f);
-	spaceModel = glm::scale(spaceModel, glm::vec3(torusScale));
-
-	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceModel));
-	//std::cout << "Torus Radius: " << model.radius << endl;
-	model.Draw(shader);
-}
-
 static void update_Camera() {
-	camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), camera.Yaw, camera.Pitch);
-}
+	// Update the camera to follow the ship
+	cameraX = cameraRadius * sin(glm::radians(cameraAngle));
+	cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
 
-static GLfloat getAngle() {
-	GLfloat shipMagnitude = sqrt((nextShipX * nextShipX) + (nextShipZ * nextShipZ));
-
-	return glm::degrees(acos(nextShipX / shipMagnitude));
+	camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), -cameraAngle + cameraOffSet, camera.Pitch);
 }
 
 static void minMax(Model& model) {
@@ -377,14 +371,8 @@ int main()
 
 	Model torus((GLchar*)"assets/objects/torus.obj");
 
-	//torusOuterRing = torusScale * torus.radius * 2;
-	//torusInnerRing = (4 * torusOuterRadius) - torusOuterRing;
-	//torusInnerRadius = (torusOuterRing - torusInnerRing) / M_PI;
-
 	torusOuterRingRadius = ((((torus.radius) * torusScale * .75) - torusScale) * .75) + torusScale;
 	torusInnerRadius = torusOuterRingRadius - torusOuterRadius;
-
-	//torusOuterBound();
 
 	spaceShip = Model((GLchar*)"assets/objects/ship.obj");
 
@@ -529,6 +517,9 @@ int main()
 		glfwSwapBuffers(window);
 
 		spaceTime += 0.1f;
+
+		spaceShipAngle += 0.1f;
+		cameraAngle += 0.1f;
 
 		// handle death condition
 		if (lives == 0)
