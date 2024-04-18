@@ -346,6 +346,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		shipX = shipRadius * sin(glm::radians(spaceShipAngle + 5));
 		shipZ = shipRadius * cos(glm::radians(spaceShipAngle + 5));
 		camera.Yaw = 0.0f;
+		cameraOffSet = 0.0f;
 		cameraX = cameraRadius * sin(glm::radians(cameraAngle));
 		cameraY = 5.0f;
 		cameraZ = cameraRadius * cos(glm::radians(cameraAngle));
