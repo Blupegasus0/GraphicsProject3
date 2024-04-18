@@ -249,11 +249,11 @@ static void minMax(Model& model) {
 	cout << "Front Magnitude: " << frontMagnitude << endl;
 	cout << "Screen Limit: " << screenLimit << endl;*/
 
-	maxShipRadius = floor(shipRadius + screenLimit - model.radius);
-	minShipRadius = floor(shipRadius - screenLimit - (model.radius*2));
+	maxShipRadius = (ceil((shipRadius + screenLimit - model.radius))-.7);
+	minShipRadius = (ceil((shipRadius - screenLimit - model.radius))-.6);
 
-	//cout << "Max Ship Radius: " << maxShipRadius << endl;
-	//cout << "Min Ship Radius: " << minShipRadius << endl;
+	cout << "Max Ship Radius: " << maxShipRadius << endl;
+	cout << "Min Ship Radius: " << minShipRadius << endl;
 	cout << endl;
 }
 
