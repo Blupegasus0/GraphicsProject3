@@ -44,7 +44,7 @@ GLfloat cameraX = 0.0f;
 GLfloat cameraY = 0.0f;
 GLfloat cameraZ = 0.0f;
 
-GLfloat cameraOffSet = -9.0f;
+GLfloat cameraOffSet = -3.0f;
 
 GLfloat asteroidX = 0.0f;
 GLfloat asteroidY = 0.0f;
