@@ -24,8 +24,8 @@
 #define numAstroids 150
 #define numSlug 15
 const GLfloat shipYLimit = 25;
-const GLfloat shipRadiusMin = 130;
-const GLfloat shipRadiusMax = 145;
+const GLfloat shipRadiusMin = 120;
+const GLfloat shipRadiusMax = 135;
 
 // Active window
 GLFWwindow* window;
@@ -44,7 +44,7 @@ GLfloat cameraX = 0.0f;
 GLfloat cameraY = 0.0f;
 GLfloat cameraZ = 0.0f;
 
-GLfloat cameraOffSet = 0.0f;
+GLfloat cameraOffSet = -9.0f;
 
 GLfloat asteroidX = 0.0f;
 GLfloat asteroidY = 0.0f;
@@ -157,32 +157,10 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 
 	if ((collision) && (!immunity)) {
 		collisionTime = spaceTime;
-		/*
-		// temporary until collision animation is implemented
-		if (shipY < (shipYLimit + 10)) {
-			shipY += 10;
-			cameraY += 10;
-		} else {
-			shipY -= 10;
-			cameraY -= 10;
-		}
-
-		GLfloat movementSpeed = 0.5f; // Adjust as needed
-		shipX += movementSpeed * 10 * forwardDirection.x;
-		shipZ += movementSpeed * 10 * forwardDirection.z;
-		// ==========
-
-		// Update the camera to follow the ship
-		cameraX += movementSpeed * 10 * forwardDirection.x;
-		cameraZ += movementSpeed * 10 * forwardDirection.z;
-		*/
 		lives--;
 		cout << "lives: " << lives << endl;
 		collision = false;
 	}
-
-	//cout << "Space Time: " << spaceTime << endl;
-	//cout << "Collision Time: " << collisionTime << endl;
 
 
 	GLuint TextureID[2] = {};
@@ -199,6 +177,7 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 		immunity = false;
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	}
 
 	shader.Use();
@@ -207,11 +186,6 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 	if (spaceShipAngle != 360) {
 		spaceShipAngle += 0.1;
 		cameraAngle += 0.1;
-		camera.Yaw -= 0.1;
-	}
-	else {
-		spaceShipAngle = 0.0;
-		cameraAngle = 0.0;
 		camera.Yaw = 0.0;
 	}
 
@@ -224,7 +198,7 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 	spaceShipModel = glm::translate(spaceShipModel, glm::vec3(shipX, shipY, shipZ));
 	model.center = glm::vec3(shipX, shipY, shipZ);
 
-	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	spaceShipModel = glm::rotate(spaceShipModel, glm::radians(spaceShipAngle + 205.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(spaceShipModel));
 
