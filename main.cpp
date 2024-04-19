@@ -177,7 +177,6 @@ static void render_SpaceShip(Shader& shader, Model& model, Camera& camera, GLuin
 		immunity = false;
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture[0]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	}
 
 	shader.Use();
